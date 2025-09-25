@@ -20,7 +20,8 @@ public class blog {
     private String title;
     private String content;
     private String author;
-    private LocalDateTime creationDate;
+    @Builder.Default
+    private LocalDateTime creationDate=LocalDateTime.now();
     private String imageUrl;
     private int likes;
     private comment comment;
