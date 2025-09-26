@@ -23,6 +23,10 @@ public class blog {
     @Builder.Default
     private LocalDateTime creationDate=LocalDateTime.now();
     private String imageUrl;
-    private int likes;
-    private comment comment;
+
+    @Builder.Default
+    private long likeCount = 0;
+
+    @Builder.Default
+    private long commentCount = 0;
 }
