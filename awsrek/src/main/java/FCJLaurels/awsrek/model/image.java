@@ -9,7 +9,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Document(collation = "file_upload")
+@Document(collation = "image_upload")
 public class image {
     @Id
     @Builder.Default
