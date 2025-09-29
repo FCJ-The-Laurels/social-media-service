@@ -42,8 +42,18 @@ public class WebSecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Allow Swagger/OpenAPI endpoints
-                .requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html").permitAll()
+                // Allow Swagger/OpenAPI endpoints and webjars
+                .requestMatchers(
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/swagger-ui/index.html",
+                        "/api-docs/**",
+                        "/v3/api-docs/**",
+                        "/v3/api-docs",
+                        "/api-docs",
+                        "/webjars/**",
+                        "/swagger-resources/**"
+                ).permitAll()
                 // Allow actuator endpoints
                 .requestMatchers("/actuator/**").permitAll()
                 // Allow authentication endpoints (add these when you create auth controllers)

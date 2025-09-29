@@ -52,8 +52,16 @@ public class JwtUtil {
     }
 
     private Key getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
-        return Keys.hmacShaKeyFor(keyBytes);
+        // Support both Base64-encoded secrets and raw string secrets stored in properties.
+        try {
+            byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+            return Keys.hmacShaKeyFor(keyBytes);
+        } catch (IllegalArgumentException ex) {
+            // Not a valid Base64 string - fallback to raw bytes
+            logger.debug("JWT secret is not Base64 encoded, using raw bytes");
+            byte[] keyBytes = jwtSecret.getBytes();
+            return Keys.hmacShaKeyFor(keyBytes);
+        }
     }
 
     public String getUserNameFromJwtToken(String token) {
