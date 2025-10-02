@@ -18,5 +18,6 @@ public class image {
     private String name;
     private String url;
     private String type;
+    @Builder.Default
     private LocalDateTime creationDate=LocalDateTime.now();
 }
