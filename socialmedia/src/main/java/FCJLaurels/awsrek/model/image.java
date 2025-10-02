@@ -3,6 +3,7 @@ import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 @Setter
 @Getter
@@ -17,4 +18,5 @@ public class image {
     private String name;
     private String url;
     private String type;
+    private LocalDateTime creationDate=LocalDateTime.now();
 }

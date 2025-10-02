@@ -2,6 +2,8 @@ package FCJLaurels.awsrek.DTO.imageDTO;
 
 import lombok.*;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -12,4 +14,5 @@ public class ImageDTO {
     private String name;
     private String url;
     private String type;
+    private LocalDateTime creationDate;
 }
