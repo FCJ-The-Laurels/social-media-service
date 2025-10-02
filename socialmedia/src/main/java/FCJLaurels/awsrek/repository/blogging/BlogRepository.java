@@ -1,4 +1,4 @@
-package FCJLaurels.awsrek.repository;
+package FCJLaurels.awsrek.repository.blogging;
 
 import FCJLaurels.awsrek.model.blog;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -11,4 +11,3 @@ public interface BlogRepository extends MongoRepository<blog, String> {
     List<blog> findByAuthor(String author);
     List<blog> findByTitleContainingIgnoreCase(String title);
 }
-

@@ -1,4 +1,4 @@
-package FCJLaurels.awsrek.repository;
+package FCJLaurels.awsrek.repository.blogging;
 
 import FCJLaurels.awsrek.model.comment;
 import org.springframework.data.mongodb.repository.MongoRepository;
