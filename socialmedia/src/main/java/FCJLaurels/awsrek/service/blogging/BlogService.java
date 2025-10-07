@@ -39,9 +39,4 @@ public interface BlogService {
     // Update comment count
     BlogDTO updateCommentCount(String id, long commentCount);
 
-    // Convert entity to DTO
-    BlogDTO convertToDTO(blog blog);
-
-    // Convert DTO to entity
-    blog convertToEntity(BlogCreationDTO blogCreationDTO);
 }

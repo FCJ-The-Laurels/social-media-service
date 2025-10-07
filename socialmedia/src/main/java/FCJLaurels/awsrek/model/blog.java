@@ -12,7 +12,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Document(collation = "Blog")
+@Document(collection = "blog")
 public class blog {
     @Id
     @Builder.Default

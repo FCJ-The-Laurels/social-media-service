@@ -32,20 +32,20 @@ public class WebConfig implements WebMvcConfigurer {
 //        return new BCryptPasswordEncoder();
 //    }
 
-    // Serve OpenAPI / Swagger UI static resources explicitly to avoid issues when security is enabled
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // Swagger UI static resources
-        registry.addResourceHandler("swagger-ui.html")
-                .addResourceLocations("classpath:/META-INF/resources/");
-
-        registry.addResourceHandler("/swagger-ui/**")
-                .addResourceLocations("classpath:/META-INF/resources/webjars/swagger-ui/");
-
-        // Webjars (used by some swagger builds)
-        registry.addResourceHandler("/webjars/**")
-                .addResourceLocations("classpath:/META-INF/resources/webjars/");
-    }
+//    // Serve OpenAPI / Swagger UI static resources explicitly to avoid issues when security is enabled
+//    @Override
+//    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+//        // Swagger UI static resources
+//        registry.addResourceHandler("swagger-ui.html")
+//                .addResourceLocations("classpath:/META-INF/resources/");
+//
+//        registry.addResourceHandler("/swagger-ui/**")
+//                .addResourceLocations("classpath:/META-INF/resources/webjars/swagger-ui/");
+//
+//        // Webjars (used by some swagger builds)
+//        registry.addResourceHandler("/webjars/**")
+//                .addResourceLocations("classpath:/META-INF/resources/webjars/");
+//    }
 
     @Bean
     public OpenAPI customOpenAPI() {

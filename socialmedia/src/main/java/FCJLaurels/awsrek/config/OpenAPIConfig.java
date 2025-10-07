@@ -21,11 +21,5 @@ import org.springframework.context.annotation.Configuration;
         scheme = "bearer"
 )
 public class OpenAPIConfig {
-    @Bean
-    public GroupedOpenApi customApi() {
-        return GroupedOpenApi.builder()
-                .group("custom-api")
-                .packagesToScan("FCJLaurels.awsrek.controller") // replace with your controller package
-                .build();
-    }
+
 }

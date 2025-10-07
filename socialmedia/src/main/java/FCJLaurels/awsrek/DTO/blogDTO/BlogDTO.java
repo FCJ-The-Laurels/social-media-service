@@ -18,4 +18,6 @@ public class BlogDTO {
     private String imageUrl;
     private long likeCount;
     private long commentCount;
+
+
 }
