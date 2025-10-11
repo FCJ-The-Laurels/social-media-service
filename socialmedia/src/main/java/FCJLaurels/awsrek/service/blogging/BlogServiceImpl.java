@@ -7,10 +7,8 @@ import FCJLaurels.awsrek.model.blog;
 import FCJLaurels.awsrek.repository.BlogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Service
 public class BlogServiceImpl implements BlogService {
@@ -18,99 +16,94 @@ public class BlogServiceImpl implements BlogService {
     private BlogRepository blogRepository;
 
     @Override
-    public BlogDTO createBlog(BlogCreationDTO blogCreationDTO) {
+    public Mono<BlogDTO> createBlog(BlogCreationDTO blogCreationDTO) {
         blog newBlog = new blog();
         newBlog.setTitle(blogCreationDTO.getTitle());
         newBlog.setContent(blogCreationDTO.getContent());
         newBlog.setAuthor(blogCreationDTO.getAuthor());
+        newBlog.setImageUrl(blogCreationDTO.getImageUrl());
         newBlog.setLikeCount(0);
         newBlog.setCommentCount(0);
-        blog savedBlog = blogRepository.save(newBlog);
-        return maptoDTO(savedBlog);
+
+        return blogRepository.save(newBlog)
+                .map(this::maptoDTO);
     }
 
     @Override
-    public Optional<BlogDTO> getBlogById(String id) {
-        return blogRepository.findById(id).map(this::maptoDTO);
+    public Mono<BlogDTO> getBlogById(String id) {
+        return blogRepository.findById(id)
+                .map(this::maptoDTO);
     }
 
     @Override
-    public List<BlogDTO> getAllBlogs() {
-        return blogRepository.findAll().stream().map(this::maptoDTO).collect(Collectors.toList());
+    public Flux<BlogDTO> getAllBlogs() {
+        return blogRepository.findAll()
+                .map(this::maptoDTO);
     }
 
     @Override
-    public List<BlogDTO> getBlogsByAuthor(String author) {
-        List<blog> blogs = blogRepository.findByAuthor(author);
-        return blogs.stream()
-                .map(this::maptoDTO)
-                .collect(Collectors.toList());
+    public Flux<BlogDTO> getBlogsByAuthor(String author) {
+        return blogRepository.findByAuthor(author)
+                .map(this::maptoDTO);
     }
 
     @Override
-    public List<BlogDTO> searchBlogsByTitle(String title) {
-        List<blog> blogs = blogRepository.findByTitleContainingIgnoreCase(title);
-        return blogs.stream()
-                .map(this::maptoDTO)
-                .collect(Collectors.toList());
+    public Flux<BlogDTO> searchBlogsByTitle(String title) {
+        return blogRepository.findByTitleContainingIgnoreCase(title)
+                .map(this::maptoDTO);
     }
 
     @Override
-    public Optional<BlogDTO> updateBlog(String id, BlogEditDTO blogEditDTO) {
-        Optional<blog> optionalBlog = blogRepository.findById(id);
-        if (optionalBlog.isPresent()) {
-            blog b = optionalBlog.get();
-            b.setTitle(blogEditDTO.getTitle());
-            b.setContent(blogEditDTO.getContent());
-            blog updated = blogRepository.save(b);
-            return Optional.of(maptoDTO(updated));
-        }
-        return Optional.empty();
+    public Mono<BlogDTO> updateBlog(String id, BlogEditDTO blogEditDTO) {
+        return blogRepository.findById(id)
+                .flatMap(b -> {
+                    b.setTitle(blogEditDTO.getTitle());
+                    b.setContent(blogEditDTO.getContent());
+                    return blogRepository.save(b);
+                })
+                .map(this::maptoDTO);
     }
 
     @Override
-    public boolean deleteBlog(String id) {
-        if (blogRepository.existsById(id)) {
-            blogRepository.deleteById(id);
-            return true;
-        }
-        return false;
+    public Mono<Boolean> deleteBlog(String id) {
+        return blogRepository.existsById(id)
+                .flatMap(exists -> {
+                    if (exists) {
+                        return blogRepository.deleteById(id)
+                                .thenReturn(true);
+                    }
+                    return Mono.just(false);
+                });
     }
 
     @Override
-    public BlogDTO incrementLikeCount(String id) {
-        Optional<blog> optionalBlog = blogRepository.findById(id);
-        if (optionalBlog.isPresent()) {
-            blog b = optionalBlog.get();
-            b.setLikeCount(b.getLikeCount() + 1);
-            blog updated = blogRepository.save(b);
-            return maptoDTO(updated);
-        }
-        return null;
+    public Mono<BlogDTO> incrementLikeCount(String id) {
+        return blogRepository.findById(id)
+                .flatMap(b -> {
+                    b.setLikeCount(b.getLikeCount() + 1);
+                    return blogRepository.save(b);
+                })
+                .map(this::maptoDTO);
     }
 
     @Override
-    public BlogDTO decrementLikeCount(String id) {
-        Optional<blog> optionalBlog = blogRepository.findById(id);
-        if (optionalBlog.isPresent()) {
-            blog b = optionalBlog.get();
-            b.setLikeCount(Math.max(0, b.getLikeCount() - 1));
-            blog updated = blogRepository.save(b);
-            return maptoDTO(updated);
-        }
-        return null;
+    public Mono<BlogDTO> decrementLikeCount(String id) {
+        return blogRepository.findById(id)
+                .flatMap(b -> {
+                    b.setLikeCount(Math.max(0, b.getLikeCount() - 1));
+                    return blogRepository.save(b);
+                })
+                .map(this::maptoDTO);
     }
 
     @Override
-    public BlogDTO updateCommentCount(String id, long commentCount) {
-        Optional<blog> optionalBlog = blogRepository.findById(id);
-        if (optionalBlog.isPresent()) {
-            blog b = optionalBlog.get();
-            b.setCommentCount(commentCount);
-            blog updated = blogRepository.save(b);
-            return maptoDTO(updated);
-        }
-        return null;
+    public Mono<BlogDTO> updateCommentCount(String id, long commentCount) {
+        return blogRepository.findById(id)
+                .flatMap(b -> {
+                    b.setCommentCount(commentCount);
+                    return blogRepository.save(b);
+                })
+                .map(this::maptoDTO);
     }
 
     private BlogDTO maptoDTO(blog entity) {

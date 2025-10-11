@@ -1,13 +1,19 @@
 package FCJLaurels.awsrek.repository;
 
 import FCJLaurels.awsrek.model.blog;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.repository.Query;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+import org.springframework.data.mongodb.repository.Tailable;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
 
 @Repository
-public interface BlogRepository extends MongoRepository<blog, String> {
-    List<blog> findByAuthor(String author);
-    List<blog> findByTitleContainingIgnoreCase(String title);
+public interface BlogRepository extends ReactiveMongoRepository<blog, String> {
+    Flux<blog> findAllByOrderByCreationDateDesc(Pageable pageable);
+    Flux<blog> findByAuthor(String author);
+    Flux<blog> findByTitleContainingIgnoreCase(String title);
+    @Tailable
+    @Query("{}")
+    Flux<blog> streamAllBy();
 }

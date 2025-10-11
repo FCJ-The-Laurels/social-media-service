@@ -16,12 +16,11 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Optional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/api/blogs")
+@RequestMapping("/blogs")
 @AllArgsConstructor
 @Tag(name = "Blog Management", description = "APIs for managing blog posts")
 public class BlogController {
@@ -44,9 +43,9 @@ public class BlogController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/create")
-    public ResponseEntity<BlogDTO> createBlog(@Valid @RequestBody BlogCreationDTO blogCreationDTO) {
-        BlogDTO createdBlog = blogService.createBlog(blogCreationDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdBlog);
+    public Mono<ResponseEntity<BlogDTO>> createBlog(@Valid @RequestBody BlogCreationDTO blogCreationDTO) {
+        return blogService.createBlog(blogCreationDTO)
+                .map(blog -> ResponseEntity.status(HttpStatus.CREATED).body(blog));
     }
 
     /**
@@ -63,12 +62,12 @@ public class BlogController {
         @ApiResponse(responseCode = "404", description = "Blog not found")
     })
     @GetMapping("/{id}/search-by-id")
-    public ResponseEntity<BlogDTO> getBlogById(
+    public Mono<ResponseEntity<BlogDTO>> getBlogById(
             @Parameter(description = "Blog ID", required = true)
             @PathVariable String id) {
-        Optional<BlogDTO> blog = blogService.getBlogById(id);
-        return blog.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return blogService.getBlogById(id)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     /**
@@ -87,9 +86,8 @@ public class BlogController {
         @ApiResponse(responseCode = "404", description = "Not found")
     })
     @GetMapping
-    public ResponseEntity<List<BlogDTO>> getAllBlogs() {
-        List<BlogDTO> blogs = blogService.getAllBlogs();
-        return ResponseEntity.ok(blogs);
+    public Flux<BlogDTO> getAllBlogs() {
+        return blogService.getAllBlogs();
     }
 
     /**
@@ -106,11 +104,10 @@ public class BlogController {
         @ApiResponse(responseCode = "400", description = "Invalid author parameter")
     })
     @GetMapping("/author/{author}")
-    public ResponseEntity<List<BlogDTO>> getBlogsByAuthor(
+    public Flux<BlogDTO> getBlogsByAuthor(
             @Parameter(description = "Author name", required = true)
             @PathVariable String author) {
-        List<BlogDTO> blogs = blogService.getBlogsByAuthor(author);
-        return ResponseEntity.ok(blogs);
+        return blogService.getBlogsByAuthor(author);
     }
 
     /**
@@ -127,11 +124,10 @@ public class BlogController {
         @ApiResponse(responseCode = "400", description = "Invalid search query")
     })
     @GetMapping("/search-by-title")
-    public ResponseEntity<List<BlogDTO>> searchBlogsByTitle(
+    public Flux<BlogDTO> searchBlogsByTitle(
             @Parameter(description = "Title search keyword", required = true)
             @RequestParam String title) {
-        List<BlogDTO> blogs = blogService.searchBlogsByTitle(title);
-        return ResponseEntity.ok(blogs);
+        return blogService.searchBlogsByTitle(title);
     }
 
     /**
@@ -152,13 +148,13 @@ public class BlogController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PutMapping("/{id}/update-blog")
-    public ResponseEntity<BlogDTO> updateBlog(
+    public Mono<ResponseEntity<BlogDTO>> updateBlog(
             @Parameter(description = "Blog ID", required = true)
             @PathVariable String id,
             @Valid @RequestBody BlogEditDTO blogEditDTO) {
-        Optional<BlogDTO> updatedBlog = blogService.updateBlog(id, blogEditDTO);
-        return updatedBlog.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        return blogService.updateBlog(id, blogEditDTO)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     /**
@@ -176,12 +172,13 @@ public class BlogController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteBlog(
+    public Mono<ResponseEntity<Void>> deleteBlog(
             @Parameter(description = "Blog ID", required = true)
             @PathVariable String id) {
-        boolean deleted = blogService.deleteBlog(id);
-        return deleted ? ResponseEntity.noContent().build()
-                : ResponseEntity.notFound().build();
+        return blogService.deleteBlog(id)
+                .map(deleted -> deleted ?
+                    ResponseEntity.noContent().<Void>build() :
+                    ResponseEntity.notFound().<Void>build());
     }
 
     /**
@@ -200,12 +197,12 @@ public class BlogController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PatchMapping("/{id}/like")
-    public ResponseEntity<BlogDTO> incrementLikeCount(
+    public Mono<ResponseEntity<BlogDTO>> incrementLikeCount(
             @Parameter(description = "Blog ID", required = true)
             @PathVariable String id) {
-        BlogDTO updatedBlog = blogService.incrementLikeCount(id);
-        return updatedBlog != null ? ResponseEntity.ok(updatedBlog)
-                : ResponseEntity.notFound().build();
+        return blogService.incrementLikeCount(id)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     /**
@@ -224,12 +221,12 @@ public class BlogController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PatchMapping("/{id}/unlike")
-    public ResponseEntity<BlogDTO> decrementLikeCount(
+    public Mono<ResponseEntity<BlogDTO>> decrementLikeCount(
             @Parameter(description = "Blog ID", required = true)
             @PathVariable String id) {
-        BlogDTO updatedBlog = blogService.decrementLikeCount(id);
-        return updatedBlog != null ? ResponseEntity.ok(updatedBlog)
-                : ResponseEntity.notFound().build();
+        return blogService.decrementLikeCount(id)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 
     /**
@@ -250,16 +247,16 @@ public class BlogController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PatchMapping("/{id}/comments/count")
-    public ResponseEntity<BlogDTO> updateCommentCount(
+    public Mono<ResponseEntity<BlogDTO>> updateCommentCount(
             @Parameter(description = "Blog ID", required = true)
             @PathVariable String id,
             @Parameter(description = "New comment count", required = true)
             @RequestParam long commentCount) {
         if (commentCount < 0) {
-            return ResponseEntity.badRequest().build();
+            return Mono.just(ResponseEntity.badRequest().build());
         }
-        BlogDTO updatedBlog = blogService.updateCommentCount(id, commentCount);
-        return updatedBlog != null ? ResponseEntity.ok(updatedBlog)
-                : ResponseEntity.notFound().build();
+        return blogService.updateCommentCount(id, commentCount)
+                .map(ResponseEntity::ok)
+                .defaultIfEmpty(ResponseEntity.notFound().build());
     }
 }
