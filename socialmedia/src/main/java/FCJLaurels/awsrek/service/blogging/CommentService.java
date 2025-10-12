@@ -4,37 +4,36 @@ import FCJLaurels.awsrek.DTO.commentDTO.CommentCreationDTO;
 import FCJLaurels.awsrek.DTO.commentDTO.CommentDTO;
 import FCJLaurels.awsrek.DTO.commentDTO.CommentEditDTO;
 import FCJLaurels.awsrek.model.comment;
-
-import java.util.List;
-import java.util.Optional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public interface CommentService {
     // Create a new comment
-    CommentDTO createComment(CommentCreationDTO commentCreationDTO);
+    Mono<CommentDTO> createComment(CommentCreationDTO commentCreationDTO);
 
     // Get comment by ID
-    Optional<CommentDTO> getCommentById(String id);
+    Mono<CommentDTO> getCommentById(String id);
 
     // Get all comments
-    List<CommentDTO> getAllComments();
+    Flux<CommentDTO> getAllComments();
 
     // Get comments by blog ID
-    List<CommentDTO> getCommentsByBlogId(String blogId);
+    Flux<CommentDTO> getCommentsByBlogId(String blogId);
 
     // Get comments by user ID
-    List<CommentDTO> getCommentsByUserId(String userId);
+    Flux<CommentDTO> getCommentsByUserId(String userId);
 
     // Update comment
-    Optional<CommentDTO> updateComment(String id, CommentEditDTO commentEditDTO);
+    Mono<CommentDTO> updateComment(String id, CommentEditDTO commentEditDTO);
 
     // Delete comment
-    boolean deleteComment(String id);
+    Mono<Boolean> deleteComment(String id);
 
     // Delete all comments by blog ID (useful when deleting a blog)
-    long deleteCommentsByBlogId(String blogId);
+    Mono<Long> deleteCommentsByBlogId(String blogId);
 
     // Count comments by blog ID
-    long countCommentsByBlogId(String blogId);
+    Mono<Long> countCommentsByBlogId(String blogId);
 
     // Convert entity to DTO
     CommentDTO convertToDTO(comment comment);

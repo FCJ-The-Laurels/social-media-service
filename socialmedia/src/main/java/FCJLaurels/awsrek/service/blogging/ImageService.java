@@ -4,37 +4,36 @@ import FCJLaurels.awsrek.DTO.imageDTO.ImageCreationDTO;
 import FCJLaurels.awsrek.DTO.imageDTO.ImageDTO;
 import FCJLaurels.awsrek.DTO.imageDTO.ImageEditDTO;
 import FCJLaurels.awsrek.model.image;
-
-import java.util.List;
-import java.util.Optional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 public interface ImageService {
     // Create a new image
-    ImageDTO createImage(ImageCreationDTO imageCreationDTO);
+    Mono<ImageDTO> createImage(ImageCreationDTO imageCreationDTO);
 
     // Get image by ID
-    Optional<ImageDTO> getImageById(String id);
+    Mono<ImageDTO> getImageById(String id);
 
     // Get all images
-    List<ImageDTO> getAllImages();
+    Flux<ImageDTO> getAllImages();
 
     // Get images by name
-    List<ImageDTO> getImagesByName(String name);
+    Flux<ImageDTO> getImagesByName(String name);
 
     // Get images by type
-    List<ImageDTO> getImagesByType(String type);
+    Flux<ImageDTO> getImagesByType(String type);
 
     // Update image
-    Optional<ImageDTO> updateImage(String id, ImageEditDTO imageEditDTO);
+    Mono<ImageDTO> updateImage(String id, ImageEditDTO imageEditDTO);
 
     // Delete image
-    boolean deleteImage(String id);
+    Mono<Boolean> deleteImage(String id);
 
     // Delete images by type
-    long deleteImagesByType(String type);
+    Mono<Long> deleteImagesByType(String type);
 
     // Search images by name containing
-    List<ImageDTO> searchImagesByNameContaining(String nameKeyword);
+    Flux<ImageDTO> searchImagesByNameContaining(String nameKeyword);
 
     // Convert entity to DTO
     ImageDTO convertToDTO(image image);

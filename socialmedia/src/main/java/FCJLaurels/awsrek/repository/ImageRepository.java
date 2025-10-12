@@ -1,14 +1,12 @@
 package FCJLaurels.awsrek.repository;
 
 import FCJLaurels.awsrek.model.image;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
+import reactor.core.publisher.Flux;
 
 @Repository
-public interface ImageRepository extends MongoRepository<image, String> {
-    List<image> findByName(String name);
-    List<image> findByType(String type);
+public interface ImageRepository extends ReactiveMongoRepository<image, String> {
+    Flux<image> findByName(String name);
+    Flux<image> findByType(String type);
 }
-
