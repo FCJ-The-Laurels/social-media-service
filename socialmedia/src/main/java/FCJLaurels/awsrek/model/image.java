@@ -10,7 +10,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Document(collation = "image_upload")
+@Document(collection = "image_upload")
 public class image {
     @Id
     @Builder.Default

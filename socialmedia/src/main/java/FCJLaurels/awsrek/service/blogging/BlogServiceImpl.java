@@ -22,8 +22,6 @@ public class BlogServiceImpl implements BlogService {
         newBlog.setContent(blogCreationDTO.getContent());
         newBlog.setAuthor(blogCreationDTO.getAuthor());
         newBlog.setImageUrl(blogCreationDTO.getImageUrl());
-        newBlog.setLikeCount(0);
-        newBlog.setCommentCount(0);
 
         return blogRepository.save(newBlog)
                 .map(this::maptoDTO);
@@ -76,36 +74,6 @@ public class BlogServiceImpl implements BlogService {
                 });
     }
 
-    @Override
-    public Mono<BlogDTO> incrementLikeCount(String id) {
-        return blogRepository.findById(id)
-                .flatMap(b -> {
-                    b.setLikeCount(b.getLikeCount() + 1);
-                    return blogRepository.save(b);
-                })
-                .map(this::maptoDTO);
-    }
-
-    @Override
-    public Mono<BlogDTO> decrementLikeCount(String id) {
-        return blogRepository.findById(id)
-                .flatMap(b -> {
-                    b.setLikeCount(Math.max(0, b.getLikeCount() - 1));
-                    return blogRepository.save(b);
-                })
-                .map(this::maptoDTO);
-    }
-
-    @Override
-    public Mono<BlogDTO> updateCommentCount(String id, long commentCount) {
-        return blogRepository.findById(id)
-                .flatMap(b -> {
-                    b.setCommentCount(commentCount);
-                    return blogRepository.save(b);
-                })
-                .map(this::maptoDTO);
-    }
-
     private BlogDTO maptoDTO(blog entity) {
         if (entity == null) return null;
         return BlogDTO.builder()
@@ -115,8 +83,6 @@ public class BlogServiceImpl implements BlogService {
                 .author(entity.getAuthor())
                 .creationDate(entity.getCreationDate())
                 .imageUrl(entity.getImageUrl())
-                .likeCount(entity.getLikeCount())
-                .commentCount(entity.getCommentCount())
                 .build();
     }
 }

@@ -27,13 +27,4 @@ public interface BlogService {
 
     // Delete blog
     Mono<Boolean> deleteBlog(String id);
-
-    // Increment like count
-    Mono<BlogDTO> incrementLikeCount(String id);
-
-    // Decrement like count
-    Mono<BlogDTO> decrementLikeCount(String id);
-
-    // Update comment count
-    Mono<BlogDTO> updateCommentCount(String id, long commentCount);
 }

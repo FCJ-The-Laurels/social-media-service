@@ -12,7 +12,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Document(collation = "Likes")
+@Document(collection = "like")
 public class like {
     @Id
     @Builder.Default

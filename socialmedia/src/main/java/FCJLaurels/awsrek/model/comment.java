@@ -12,7 +12,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-@Document(collation = "Commnent")
+@Document(collection = "commnent")
 public class comment {
     @Id
     @Builder.Default
