@@ -3,6 +3,9 @@ package FCJLaurels.awsrek.controller.blogging;
 import FCJLaurels.awsrek.DTO.blogDTO.BlogCreationDTO;
 import FCJLaurels.awsrek.DTO.blogDTO.BlogDTO;
 import FCJLaurels.awsrek.DTO.blogDTO.BlogEditDTO;
+import FCJLaurels.awsrek.DTO.blogDTO.BlogResponseDTO;
+import FCJLaurels.awsrek.DTO.blogDTO.BlogPageResponse;
+import FCJLaurels.awsrek.DTO.blogDTO.BlogCursorResponse;
 import FCJLaurels.awsrek.service.blogging.BlogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -179,6 +183,70 @@ public class BlogController {
                 .map(deleted -> deleted ?
                     ResponseEntity.noContent().<Void>build() :
                     ResponseEntity.notFound().<Void>build());
+    }
+
+    /**
+     * Get paginated blogs (Traditional offset-based pagination)
+     *
+     * Response Codes:
+     * - 200 OK: Successfully retrieved paginated blogs
+     * - 400 BAD REQUEST: Invalid pagination parameters
+     * - 500 INTERNAL SERVER ERROR: Server error during retrieval
+     */
+    @Operation(
+        summary = "Get paginated blogs",
+        description = "Retrieves blogs with traditional offset-based pagination. Useful for page numbers display."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved paginated blogs",
+            content = @Content(schema = @Schema(implementation = BlogPageResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid pagination parameters"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/paginated")
+    public Mono<ResponseEntity<BlogPageResponse>> getPaginatedBlogs(
+            @Parameter(description = "Page number (0-based)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Number of items per page", example = "10")
+            @RequestParam(defaultValue = "10") int size) {
+
+        return blogService.getPaginatedBlogs(page, size)
+                .map(ResponseEntity::ok);
+    }
+
+    /**
+     * Get blogs using cursor-based pagination (Infinite scroll like Facebook/Amazon)
+     *
+     * Response Codes:
+     * - 200 OK: Successfully retrieved blogs with cursor
+     * - 400 BAD REQUEST: Invalid cursor or size parameter
+     * - 500 INTERNAL SERVER ERROR: Server error during retrieval
+     */
+    @Operation(
+        summary = "Get blogs with cursor pagination (Infinite Scroll)",
+        description = "Retrieves blogs using cursor-based pagination for infinite scrolling. " +
+                      "Perfect for continuous loading like Facebook feed or Amazon product list. " +
+                      "Pass the 'nextCursor' from previous response to get next batch of results."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved blogs",
+            content = @Content(schema = @Schema(implementation = BlogCursorResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid cursor or size parameter"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/feed")
+    public Mono<ResponseEntity<BlogCursorResponse>> getBlogsFeed(
+            @Parameter(
+                description = "Cursor for pagination (omit or use empty string for first page, " +
+                             "use 'nextCursor' from previous response for subsequent pages)",
+                example = ""
+            )
+            @RequestParam(required = false) String cursor,
+            @Parameter(description = "Number of items to fetch", example = "10")
+            @RequestParam(defaultValue = "10") int size) {
+
+        return blogService.getBlogsByCursor(cursor, size)
+                .map(ResponseEntity::ok);
     }
 
 }

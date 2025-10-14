@@ -3,6 +3,8 @@ package FCJLaurels.awsrek.service.blogging;
 import FCJLaurels.awsrek.DTO.blogDTO.BlogCreationDTO;
 import FCJLaurels.awsrek.DTO.blogDTO.BlogDTO;
 import FCJLaurels.awsrek.DTO.blogDTO.BlogEditDTO;
+import FCJLaurels.awsrek.DTO.blogDTO.BlogPageResponse;
+import FCJLaurels.awsrek.DTO.blogDTO.BlogCursorResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -27,4 +29,10 @@ public interface BlogService {
 
     // Delete blog
     Mono<Boolean> deleteBlog(String id);
+
+    // Traditional offset-based pagination
+    Mono<BlogPageResponse> getPaginatedBlogs(int page, int size);
+
+    // Cursor-based pagination for infinite scrolling (like Facebook/Amazon)
+    Mono<BlogCursorResponse> getBlogsByCursor(String cursor, int size);
 }
