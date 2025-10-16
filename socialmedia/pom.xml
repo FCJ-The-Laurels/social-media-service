@@ -28,7 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>25</java.version>
-
+		<netty.version>4.2.7.Final</netty.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -150,6 +150,10 @@
 							<artifactId>lombok</artifactId>
 						</exclude>
 					</excludes>
+					<jvmArguments>
+						--add-opens java.base/java.nio=ALL-UNNAMED
+						--add-opens java.base/jdk.internal.misc=ALL-UNNAMED
+					</jvmArguments>
 				</configuration>
 			</plugin>
 		</plugins>

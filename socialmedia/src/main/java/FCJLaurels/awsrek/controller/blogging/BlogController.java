@@ -3,7 +3,6 @@ package FCJLaurels.awsrek.controller.blogging;
 import FCJLaurels.awsrek.DTO.blogDTO.BlogCreationDTO;
 import FCJLaurels.awsrek.DTO.blogDTO.BlogDTO;
 import FCJLaurels.awsrek.DTO.blogDTO.BlogEditDTO;
-import FCJLaurels.awsrek.DTO.blogDTO.BlogResponseDTO;
 import FCJLaurels.awsrek.DTO.blogDTO.BlogPageResponse;
 import FCJLaurels.awsrek.DTO.blogDTO.BlogCursorResponse;
 import FCJLaurels.awsrek.service.blogging.BlogService;

@@ -76,9 +76,7 @@ public class CommentServiceImplementation implements CommentService {
 
     @Override
     public Mono<Long> deleteCommentsByBlogId(String blogId) {
-        return commentRepository.findByBlogId(blogId)
-                .flatMap(c -> commentRepository.deleteById(c.getId()).thenReturn(1L))
-                .reduce(0L, Long::sum);
+        return commentRepository.deleteByBlogId(blogId);
     }
 
     @Override
