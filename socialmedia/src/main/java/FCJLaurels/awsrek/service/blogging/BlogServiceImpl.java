@@ -7,6 +7,7 @@ import FCJLaurels.awsrek.DTO.blogDTO.BlogPageResponse;
 import FCJLaurels.awsrek.DTO.blogDTO.BlogCursorResponse;
 import FCJLaurels.awsrek.model.blog;
 import FCJLaurels.awsrek.repository.BlogRepository;
+import FCJLaurels.awsrek.service.MetricsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +24,9 @@ public class BlogServiceImpl implements BlogService {
     @Autowired
     private BlogRepository blogRepository;
 
+    @Autowired
+    private MetricsService metricsService;
+
     @Override
     public Mono<BlogDTO> createBlog(BlogCreationDTO blogCreationDTO) {
         blog newBlog = new blog();
@@ -32,30 +36,36 @@ public class BlogServiceImpl implements BlogService {
         newBlog.setImageUrl(blogCreationDTO.getImageUrl());
 
         return blogRepository.save(newBlog)
+                .doOnSuccess(saved -> metricsService.incrementBlogCreated())
+                .doOnError(error -> metricsService.incrementApiError("BlogCreationError"))
                 .map(this::maptoDTO);
     }
 
     @Override
     public Mono<BlogDTO> getBlogById(String id) {
         return blogRepository.findById(id)
+                .doOnError(error -> metricsService.incrementApiError("BlogRetrievalError"))
                 .map(this::maptoDTO);
     }
 
     @Override
     public Flux<BlogDTO> getAllBlogs() {
         return blogRepository.findAll()
+                .doOnError(error -> metricsService.incrementApiError("BlogListError"))
                 .map(this::maptoDTO);
     }
 
     @Override
     public Flux<BlogDTO> getBlogsByAuthor(String author) {
         return blogRepository.findByAuthor(author)
+                .doOnError(error -> metricsService.incrementApiError("BlogsByAuthorError"))
                 .map(this::maptoDTO);
     }
 
     @Override
     public Flux<BlogDTO> searchBlogsByTitle(String title) {
         return blogRepository.findByTitleContainingIgnoreCase(title)
+                .doOnError(error -> metricsService.incrementApiError("BlogSearchError"))
                 .map(this::maptoDTO);
     }
 
@@ -67,6 +77,7 @@ public class BlogServiceImpl implements BlogService {
                     b.setContent(blogEditDTO.getContent());
                     return blogRepository.save(b);
                 })
+                .doOnError(error -> metricsService.incrementApiError("BlogUpdateError"))
                 .map(this::maptoDTO);
     }
 
@@ -76,10 +87,12 @@ public class BlogServiceImpl implements BlogService {
                 .flatMap(exists -> {
                     if (exists) {
                         return blogRepository.deleteById(id)
+                                .doOnSuccess(v -> metricsService.incrementBlogDeleted())
                                 .thenReturn(true);
                     }
                     return Mono.just(false);
-                });
+                })
+                .doOnError(error -> metricsService.incrementApiError("BlogDeletionError"));
     }
 
     @Override

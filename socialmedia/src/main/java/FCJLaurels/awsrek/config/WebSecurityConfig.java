@@ -60,6 +60,8 @@ public class WebSecurityConfig {
 
                 // Allow public endpoints for blogs (you can modify this as needed)
                 .requestMatchers("/api/blogs/**").permitAll()
+                .requestMatchers("/api/metrics/**").permitAll()
+                .requestMatchers("/api/comments/**").permitAll()
                 // Require authentication for other API endpoints
                 .requestMatchers("/api/**").authenticated()
                 // Allow all other requests

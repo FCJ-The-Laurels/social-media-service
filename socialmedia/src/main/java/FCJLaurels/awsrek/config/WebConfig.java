@@ -6,6 +6,7 @@ import io.swagger.v3.oas.models.info.Info;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -13,10 +14,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
 
+    private final MetricsInterceptor metricsInterceptor;
+
 //    private final JWTInterceptor jwtInterceptor;
 //
-//    @Override
-//    public void addInterceptors(InterceptorRegistry registry) {
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        // Add metrics interceptor to track all requests
+        registry.addInterceptor(metricsInterceptor)
+                .addPathPatterns("/**")
+                .excludePathPatterns("/actuator/**"); // Don't track actuator endpoints
 //        registry.addInterceptor(jwtInterceptor)
 //                .addPathPatterns("/**")
 //                .excludePathPatterns(
@@ -26,7 +33,7 @@ public class WebConfig implements WebMvcConfigurer {
 //                        "/swagger-ui.html",
 //                        "/webjars/**"
 //                );
-//    }
+    }
 //    @Bean
 //    public PasswordEncoder passwordEncoder() {
 //        return new BCryptPasswordEncoder();
