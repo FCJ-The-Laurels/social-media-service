@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "FCJ.user.grpc";
+option java_outer_classname = "UserInfoProto";
+
+package userinfo;
+
+// User Information Service
+service UserInfoService {
+  // Create new user info with all fields
+  rpc CreateUserInfo(CreateUserInfoRequest) returns (UserInfoResponse);
+
+  // Create empty user info
+  rpc CreateEmptyUserInfo(CreateEmptyUserInfoRequest) returns (UserInfoResponse);
+
+  // Get user info by ID
+  rpc GetUserInfoById(GetUserInfoByIdRequest) returns (UserInfoResponse);
+
+  // Update user info (full update)
+  rpc UpdateUserInfo(UpdateUserInfoRequest) returns (UserInfoResponse);
+
+  // Patch user info (partial update)
+  rpc PatchUserInfo(PatchUserInfoRequest) returns (UserInfoResponse);
+
+  // Delete user info
+  rpc DeleteUserInfo(DeleteUserInfoRequest) returns (DeleteUserInfoResponse);
+
+  rpc BlogUserInfo(BlogUserInfoRequest) returns (BlogUserInfoResponse);
+}
+
+// Messages
+message UserInfoResponse {
+  string id = 1;
+  string user_id = 2;
+  string full_name = 3;
+  string avatar_url = 4;
+  string phone_number = 5;
+  string address = 6;
+}
+
+message CreateUserInfoRequest {
+  string user_id = 1;
+  string full_name = 2;
+  string avatar_url = 3;
+  string phone_number = 4;
+  string address = 5;
+}
+
+message CreateEmptyUserInfoRequest {
+  string user_id = 1;
+}
+
+message GetUserInfoByIdRequest {
+  string id = 1;
+}
+
+message UpdateUserInfoRequest {
+  string id = 1;
+  string full_name = 2;
+  string avatar_url = 3;
+  string phone_number = 4;
+  string address = 5;
+}
+
+message PatchUserInfoRequest {
+  string id = 1;
+  optional string full_name = 2;
+  optional string avatar_url = 3;
+  optional string phone_number = 4;
+  optional string address = 5;
+}
+
+message DeleteUserInfoRequest {
+  string id = 1;
+}
+
+message DeleteUserInfoResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message BlogUserInfoRequest{
+  string id=1;
+}
+
+message BlogUserInfoResponse{
+  string id=1;
+  string name=2;
+  string avatar=3;
+}
+

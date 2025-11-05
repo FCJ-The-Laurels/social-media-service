@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/socialmedia/.dockerignore">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/socialmedia/.dockerignore" />
+              <option name="updatedContent" value="# Maven&#10;target/&#10;!.mvn/wrapper/maven-wrapper.jar&#10;!**/src/main/**/target/&#10;!**/src/test/**/target/&#10;&#10;# IDE&#10;.idea/&#10;*.iws&#10;*.iml&#10;*.ipr&#10;.vscode/&#10;*.swp&#10;*.swo&#10;*~&#10;&#10;# OS&#10;.DS_Store&#10;Thumbs.db&#10;&#10;# Git&#10;.git&#10;.gitignore&#10;.gitattributes&#10;&#10;# Documentation&#10;*.md&#10;!README.md&#10;&#10;# Logs&#10;logs/&#10;*.log&#10;&#10;# Test files&#10;**/src/test/&#10;&#10;# Build files&#10;*.class&#10;*.jar&#10;*.war&#10;*.ear&#10;&#10;# Temporary files&#10;*.tmp&#10;*.temp&#10;&#10;# Docker&#10;Dockerfile*&#10;docker-compose*.yml&#10;.dockerignore&#10;&#10;# CI/CD&#10;.github/&#10;.gitlab-ci.yml&#10;Jenkinsfile&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
