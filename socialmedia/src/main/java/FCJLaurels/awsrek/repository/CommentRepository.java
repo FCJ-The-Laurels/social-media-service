@@ -1,15 +1,15 @@
 package FCJLaurels.awsrek.repository;
 
 import FCJLaurels.awsrek.model.comment;
-import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @Repository
-public interface CommentRepository extends ReactiveMongoRepository<comment, String> {
-    Flux<comment> findByBlogId(String blogId);
-    Flux<comment> findByUserId(String userId);
-    Mono<Long> countByBlogId(String blogId);
-    Mono<Long> deleteByBlogId(String blogId);
+public interface CommentRepository extends MongoRepository<comment, String> {
+    List<comment> findByBlogId(String blogId);
+    List<comment> findByUserId(String userId);
+    long countByBlogId(String blogId);
+    long deleteByBlogId(String blogId);
 }

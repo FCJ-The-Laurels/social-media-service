@@ -18,8 +18,5 @@ public class BlogCreationDTO {
     @NotBlank(message = "Content is required")
     private String content;
 
-    @NotBlank(message = "Author is required")
-    private String author;
-
     private String imageUrl;
 }

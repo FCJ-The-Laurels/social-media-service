@@ -16,8 +16,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/comments")
@@ -43,9 +43,9 @@ public class CommentController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/create")
-    public Mono<ResponseEntity<CommentDTO>> createComment(@Valid @RequestBody CommentCreationDTO commentCreationDTO) {
-        return commentService.createComment(commentCreationDTO)
-                .map(comment -> ResponseEntity.status(HttpStatus.CREATED).body(comment));
+    public ResponseEntity<CommentDTO> createComment(@Valid @RequestBody CommentCreationDTO commentCreationDTO) {
+        CommentDTO created = commentService.createComment(commentCreationDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     /**
@@ -62,12 +62,12 @@ public class CommentController {
         @ApiResponse(responseCode = "404", description = "Comment not found")
     })
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<CommentDTO>> getCommentById(
+    public ResponseEntity<CommentDTO> getCommentById(
             @Parameter(description = "Comment ID", required = true)
             @PathVariable String id) {
         return commentService.getCommentById(id)
                 .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.notFound().build());
     }
 
     /**
@@ -84,8 +84,8 @@ public class CommentController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping
-    public Flux<CommentDTO> getAllComments() {
-        return commentService.getAllComments();
+    public ResponseEntity<List<CommentDTO>> getAllComments() {
+        return ResponseEntity.ok(commentService.getAllComments());
     }
 
     /**
@@ -102,10 +102,10 @@ public class CommentController {
         @ApiResponse(responseCode = "400", description = "Invalid blog ID parameter")
     })
     @GetMapping("/blog/{blogId}")
-    public Flux<CommentDTO> getCommentsByBlogId(
+    public ResponseEntity<List<CommentDTO>> getCommentsByBlogId(
             @Parameter(description = "Blog ID", required = true)
             @PathVariable String blogId) {
-        return commentService.getCommentsByBlogId(blogId);
+        return ResponseEntity.ok(commentService.getCommentsByBlogId(blogId));
     }
 
     /**
@@ -122,10 +122,10 @@ public class CommentController {
         @ApiResponse(responseCode = "400", description = "Invalid user ID parameter")
     })
     @GetMapping("/user/{userId}")
-    public Flux<CommentDTO> getCommentsByUserId(
+    public ResponseEntity<List<CommentDTO>> getCommentsByUserId(
             @Parameter(description = "User ID", required = true)
             @PathVariable String userId) {
-        return commentService.getCommentsByUserId(userId);
+        return ResponseEntity.ok(commentService.getCommentsByUserId(userId));
     }
 
     /**
@@ -146,13 +146,13 @@ public class CommentController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PutMapping("/{id}")
-    public Mono<ResponseEntity<CommentDTO>> updateComment(
+    public ResponseEntity<CommentDTO> updateComment(
             @Parameter(description = "Comment ID", required = true)
             @PathVariable String id,
             @Valid @RequestBody CommentEditDTO commentEditDTO) {
         return commentService.updateComment(id, commentEditDTO)
                 .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.notFound().build());
     }
 
     /**
@@ -170,13 +170,11 @@ public class CommentController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @DeleteMapping("/{id}")
-    public Mono<ResponseEntity<Void>> deleteComment(
+    public ResponseEntity<Void> deleteComment(
             @Parameter(description = "Comment ID", required = true)
             @PathVariable String id) {
-        return commentService.deleteComment(id)
-                .map(deleted -> deleted ?
-                    ResponseEntity.noContent().<Void>build() :
-                    ResponseEntity.notFound().<Void>build());
+        boolean deleted = commentService.deleteComment(id);
+        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
     /**
@@ -192,11 +190,11 @@ public class CommentController {
         @ApiResponse(responseCode = "400", description = "Invalid blog ID parameter")
     })
     @DeleteMapping("/blog/{blogId}")
-    public Mono<ResponseEntity<Long>> deleteCommentsByBlogId(
+    public ResponseEntity<Long> deleteCommentsByBlogId(
             @Parameter(description = "Blog ID", required = true)
             @PathVariable String blogId) {
-        return commentService.deleteCommentsByBlogId(blogId)
-                .map(ResponseEntity::ok);
+        long count = commentService.deleteCommentsByBlogId(blogId);
+        return ResponseEntity.ok(count);
     }
 
     /**
@@ -210,10 +208,10 @@ public class CommentController {
         @ApiResponse(responseCode = "200", description = "Successfully retrieved comment count")
     })
     @GetMapping("/blog/{blogId}/count")
-    public Mono<ResponseEntity<Long>> countCommentsByBlogId(
+    public ResponseEntity<Long> countCommentsByBlogId(
             @Parameter(description = "Blog ID", required = true)
             @PathVariable String blogId) {
-        return commentService.countCommentsByBlogId(blogId)
-                .map(ResponseEntity::ok);
+        long count = commentService.countCommentsByBlogId(blogId);
+        return ResponseEntity.ok(count);
     }
 }

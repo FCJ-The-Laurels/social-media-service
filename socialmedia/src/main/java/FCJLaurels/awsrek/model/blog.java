@@ -19,7 +19,7 @@ public class blog {
     private String id= UUID.randomUUID().toString();
     private String title;
     private String content;
-    private String author;
+    private UUID author;
     @Builder.Default
     private LocalDateTime creationDate=LocalDateTime.now();
     private String imageUrl;

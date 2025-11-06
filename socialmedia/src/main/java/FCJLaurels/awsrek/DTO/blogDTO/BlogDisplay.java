@@ -3,19 +3,17 @@ package FCJLaurels.awsrek.DTO.blogDTO;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
-
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class BlogDTO {
-    private String id;
-    private String title;
-    private String content;
-    private UUID author;
-    private LocalDateTime creationDate;
-    private String imageUrl;
 
+public class BlogDisplay {
+    private String authorName;
+    private String authorAvatar;
+    private String title;
+    private String imageURL;
+    private String content;
+    private LocalDateTime creationDate;
 }

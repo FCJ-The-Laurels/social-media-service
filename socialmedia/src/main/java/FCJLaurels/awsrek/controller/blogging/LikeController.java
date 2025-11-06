@@ -15,8 +15,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+
+import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/likes")
@@ -42,9 +43,9 @@ public class LikeController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/create")
-    public Mono<ResponseEntity<LikeDTO>> createLike(@Valid @RequestBody LikeCreationDTO likeCreationDTO) {
-        return likeService.createLike(likeCreationDTO)
-                .map(like -> ResponseEntity.status(HttpStatus.CREATED).body(like));
+    public ResponseEntity<LikeDTO> createLike(@Valid @RequestBody LikeCreationDTO likeCreationDTO) {
+        LikeDTO created = likeService.createLike(likeCreationDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     /**
@@ -61,12 +62,9 @@ public class LikeController {
         @ApiResponse(responseCode = "404", description = "Like not found")
     })
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<LikeDTO>> getLikeById(
-            @Parameter(description = "Like ID", required = true)
-            @PathVariable String id) {
-        return likeService.getLikeById(id)
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+    public ResponseEntity<LikeDTO> getLikeById(@Parameter(description = "Like ID", required = true) @PathVariable String id) {
+        Optional<LikeDTO> dto = likeService.getLikeById(id);
+        return dto.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     /**
@@ -83,8 +81,8 @@ public class LikeController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping
-    public Flux<LikeDTO> getAllLikes() {
-        return likeService.getAllLikes();
+    public ResponseEntity<List<LikeDTO>> getAllLikes() {
+        return ResponseEntity.ok(likeService.getAllLikes());
     }
 
     /**
@@ -101,10 +99,8 @@ public class LikeController {
         @ApiResponse(responseCode = "400", description = "Invalid blog ID parameter")
     })
     @GetMapping("/blog/{blogId}")
-    public Flux<LikeDTO> getLikesByBlogId(
-            @Parameter(description = "Blog ID", required = true)
-            @PathVariable String blogId) {
-        return likeService.getLikesByBlogId(blogId);
+    public ResponseEntity<List<LikeDTO>> getLikesByBlogId(@Parameter(description = "Blog ID", required = true) @PathVariable String blogId) {
+        return ResponseEntity.ok(likeService.getLikesByBlogId(blogId));
     }
 
     /**
@@ -121,10 +117,8 @@ public class LikeController {
         @ApiResponse(responseCode = "400", description = "Invalid user ID parameter")
     })
     @GetMapping("/user/{userId}")
-    public Flux<LikeDTO> getLikesByUserId(
-            @Parameter(description = "User ID", required = true)
-            @PathVariable String userId) {
-        return likeService.getLikesByUserId(userId);
+    public ResponseEntity<List<LikeDTO>> getLikesByUserId(@Parameter(description = "User ID", required = true) @PathVariable String userId) {
+        return ResponseEntity.ok(likeService.getLikesByUserId(userId));
     }
 
     /**
@@ -140,13 +134,10 @@ public class LikeController {
         @ApiResponse(responseCode = "400", description = "Invalid parameters")
     })
     @GetMapping("/check")
-    public Mono<ResponseEntity<Boolean>> hasUserLikedBlog(
-            @Parameter(description = "User ID", required = true)
-            @RequestParam String userId,
-            @Parameter(description = "Blog ID", required = true)
-            @RequestParam String blogId) {
-        return likeService.hasUserLikedBlog(userId, blogId)
-                .map(ResponseEntity::ok);
+    public ResponseEntity<Boolean> hasUserLikedBlog(@Parameter(description = "User ID", required = true) @RequestParam String userId,
+                                                    @Parameter(description = "Blog ID", required = true) @RequestParam String blogId) {
+        boolean liked = likeService.hasUserLikedBlog(userId, blogId);
+        return ResponseEntity.ok(liked);
     }
 
     /**
@@ -163,14 +154,10 @@ public class LikeController {
         @ApiResponse(responseCode = "404", description = "Like not found")
     })
     @GetMapping("/user/{userId}/blog/{blogId}")
-    public Mono<ResponseEntity<LikeDTO>> getLikeByUserAndBlog(
-            @Parameter(description = "User ID", required = true)
-            @PathVariable String userId,
-            @Parameter(description = "Blog ID", required = true)
-            @PathVariable String blogId) {
-        return likeService.getLikeByUserIdAndBlogId(userId, blogId)
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+    public ResponseEntity<LikeDTO> getLikeByUserAndBlog(@Parameter(description = "User ID", required = true) @PathVariable String userId,
+                                                        @Parameter(description = "Blog ID", required = true) @PathVariable String blogId) {
+        Optional<LikeDTO> dto = likeService.getLikeByUserIdAndBlogId(userId, blogId);
+        return dto.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
     /**
@@ -189,14 +176,10 @@ public class LikeController {
         @ApiResponse(responseCode = "400", description = "Invalid parameters")
     })
     @PostMapping("/toggle")
-    public Mono<ResponseEntity<LikeDTO>> toggleLike(
-            @Parameter(description = "User ID", required = true)
-            @RequestParam String userId,
-            @Parameter(description = "Blog ID", required = true)
-            @RequestParam String blogId) {
-        return likeService.toggleLike(userId, blogId)
-                .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.noContent().build());
+    public ResponseEntity<LikeDTO> toggleLike(@Parameter(description = "User ID", required = true) @RequestParam String userId,
+                                              @Parameter(description = "Blog ID", required = true) @RequestParam String blogId) {
+        Optional<LikeDTO> result = likeService.toggleLike(userId, blogId);
+        return result.map(ResponseEntity::ok).orElse(ResponseEntity.noContent().build());
     }
 
     /**
@@ -214,13 +197,9 @@ public class LikeController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @DeleteMapping("/{id}")
-    public Mono<ResponseEntity<Void>> deleteLike(
-            @Parameter(description = "Like ID", required = true)
-            @PathVariable String id) {
-        return likeService.deleteLike(id)
-                .map(deleted -> deleted ?
-                    ResponseEntity.noContent().<Void>build() :
-                    ResponseEntity.notFound().<Void>build());
+    public ResponseEntity<Void> deleteLike(@Parameter(description = "Like ID", required = true) @PathVariable String id) {
+        boolean deleted = likeService.deleteLike(id);
+        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
     /**
@@ -236,15 +215,10 @@ public class LikeController {
         @ApiResponse(responseCode = "404", description = "Like not found")
     })
     @DeleteMapping("/user/{userId}/blog/{blogId}")
-    public Mono<ResponseEntity<Void>> deleteLikeByUserAndBlog(
-            @Parameter(description = "User ID", required = true)
-            @PathVariable String userId,
-            @Parameter(description = "Blog ID", required = true)
-            @PathVariable String blogId) {
-        return likeService.deleteLikeByUserIdAndBlogId(userId, blogId)
-                .map(deleted -> deleted ?
-                    ResponseEntity.noContent().<Void>build() :
-                    ResponseEntity.notFound().<Void>build());
+    public ResponseEntity<Void> deleteLikeByUserAndBlog(@Parameter(description = "User ID", required = true) @PathVariable String userId,
+                                                       @Parameter(description = "Blog ID", required = true) @PathVariable String blogId) {
+        boolean deleted = likeService.deleteLikeByUserIdAndBlogId(userId, blogId);
+        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
     /**
@@ -258,11 +232,9 @@ public class LikeController {
         @ApiResponse(responseCode = "200", description = "Successfully retrieved like count")
     })
     @GetMapping("/blog/{blogId}/count")
-    public Mono<ResponseEntity<Long>> countLikesByBlogId(
-            @Parameter(description = "Blog ID", required = true)
-            @PathVariable String blogId) {
-        return likeService.countLikesByBlogId(blogId)
-                .map(ResponseEntity::ok);
+    public ResponseEntity<Long> countLikesByBlogId(@Parameter(description = "Blog ID", required = true) @PathVariable String blogId) {
+        long count = likeService.countLikesByBlogId(blogId);
+        return ResponseEntity.ok(count);
     }
 
     /**
@@ -276,10 +248,8 @@ public class LikeController {
         @ApiResponse(responseCode = "200", description = "Successfully retrieved like count")
     })
     @GetMapping("/user/{userId}/count")
-    public Mono<ResponseEntity<Long>> countLikesByUserId(
-            @Parameter(description = "User ID", required = true)
-            @PathVariable String userId) {
-        return likeService.countLikesByUserId(userId)
-                .map(ResponseEntity::ok);
+    public ResponseEntity<Long> countLikesByUserId(@Parameter(description = "User ID", required = true) @PathVariable String userId) {
+        long count = likeService.countLikesByUserId(userId);
+        return ResponseEntity.ok(count);
     }
 }

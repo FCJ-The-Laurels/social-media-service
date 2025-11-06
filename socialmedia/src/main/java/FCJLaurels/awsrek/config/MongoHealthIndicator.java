@@ -3,31 +3,25 @@ package FCJLaurels.awsrek.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
-import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
-import reactor.core.publisher.Mono;
 
 /**
- * Custom health indicator for MongoDB connection
+ * Custom health indicator for MongoDB connection (blocking)
  */
 @Component
 @RequiredArgsConstructor
 public class MongoHealthIndicator implements HealthIndicator {
 
-    private final ReactiveMongoTemplate mongoTemplate;
+    private final MongoTemplate mongoTemplate;
 
     @Override
     public Health health() {
         try {
-            // Try to execute a simple command to check MongoDB connectivity
-            Mono<String> dbName = mongoTemplate.getMongoDatabase()
-                    .map(db -> db.getName());
-
-            String databaseName = dbName.block();
-
-            if (databaseName != null) {
+            String dbName = mongoTemplate.getDb().getName();
+            if (dbName != null) {
                 return Health.up()
-                        .withDetail("database", databaseName)
+                        .withDetail("database", dbName)
                         .withDetail("status", "Connected")
                         .build();
             } else {
@@ -42,4 +36,3 @@ public class MongoHealthIndicator implements HealthIndicator {
         }
     }
 }
-

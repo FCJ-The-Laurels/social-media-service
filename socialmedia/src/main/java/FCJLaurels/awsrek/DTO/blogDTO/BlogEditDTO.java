@@ -15,7 +15,5 @@ public class BlogEditDTO {
 
     private String content;
 
-    private String author;
-
     private String imageUrl;
 }

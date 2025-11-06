@@ -5,6 +5,8 @@ import FCJLaurels.awsrek.DTO.blogDTO.BlogDTO;
 import FCJLaurels.awsrek.DTO.blogDTO.BlogEditDTO;
 import FCJLaurels.awsrek.DTO.blogDTO.BlogPageResponse;
 import FCJLaurels.awsrek.DTO.blogDTO.BlogCursorResponse;
+import FCJLaurels.awsrek.DTO.blogDTO.BlogDisplay;
+import FCJLaurels.awsrek.DTO.blogDTO.CursorPageDTO;
 import FCJLaurels.awsrek.service.blogging.BlogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -15,12 +17,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/blogs")
@@ -36,19 +37,29 @@ public class BlogController {
      * Response Codes:
      * - 201 CREATED: Blog successfully created, returns the created blog with generated ID
      * - 400 BAD REQUEST: Invalid input data (validation errors)
+     * - 401 UNAUTHORIZED: Missing or invalid user ID in header
      * - 500 INTERNAL SERVER ERROR: Server error during blog creation
      */
-    @Operation(summary = "Create a new blog post", description = "Creates a new blog post with the provided information")
+    @Operation(summary = "Create a new blog post", description = "Creates a new blog post with the provided information. User ID is extracted from X-User-Id header.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "201", description = "Blog successfully created",
             content = @Content(schema = @Schema(implementation = BlogDTO.class))),
         @ApiResponse(responseCode = "400", description = "Invalid input data"),
+        @ApiResponse(responseCode = "401", description = "Missing or invalid user ID"),
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/create")
-    public Mono<ResponseEntity<BlogDTO>> createBlog(@Valid @RequestBody BlogCreationDTO blogCreationDTO) {
-        return blogService.createBlog(blogCreationDTO)
-                .map(blog -> ResponseEntity.status(HttpStatus.CREATED).body(blog));
+    public ResponseEntity<BlogDTO> createBlog(
+            @Valid @RequestBody BlogCreationDTO blogCreationDTO,
+            @Parameter(description = "User ID from API Gateway", required = true)
+            @RequestHeader(value = "X-User-Id", required = false) String userId) {
+
+        if (userId == null || userId.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        BlogDTO created = blogService.createBlog(blogCreationDTO, userId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     /**
@@ -65,12 +76,12 @@ public class BlogController {
         @ApiResponse(responseCode = "404", description = "Blog not found")
     })
     @GetMapping("/{id}/search-by-id")
-    public Mono<ResponseEntity<BlogDTO>> getBlogById(
+    public ResponseEntity<BlogDTO> getBlogById(
             @Parameter(description = "Blog ID", required = true)
             @PathVariable String id) {
         return blogService.getBlogById(id)
                 .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.notFound().build());
     }
 
     /**
@@ -89,8 +100,9 @@ public class BlogController {
         @ApiResponse(responseCode = "404", description = "Not found")
     })
     @GetMapping
-    public Flux<BlogDTO> getAllBlogs() {
-        return blogService.getAllBlogs();
+    public ResponseEntity<List<BlogDTO>> getAllBlogs() {
+        List<BlogDTO> list = blogService.getAllBlogs();
+        return ResponseEntity.ok(list);
     }
 
     /**
@@ -107,10 +119,10 @@ public class BlogController {
         @ApiResponse(responseCode = "400", description = "Invalid author parameter")
     })
     @GetMapping("/author/{author}")
-    public Flux<BlogDTO> getBlogsByAuthor(
+    public ResponseEntity<List<BlogDTO>> getBlogsByAuthor(
             @Parameter(description = "Author name", required = true)
             @PathVariable String author) {
-        return blogService.getBlogsByAuthor(author);
+        return ResponseEntity.ok(blogService.getBlogsByAuthor(author));
     }
 
     /**
@@ -127,10 +139,10 @@ public class BlogController {
         @ApiResponse(responseCode = "400", description = "Invalid search query")
     })
     @GetMapping("/search-by-title")
-    public Flux<BlogDTO> searchBlogsByTitle(
+    public ResponseEntity<List<BlogDTO>> searchBlogsByTitle(
             @Parameter(description = "Title search keyword", required = true)
             @RequestParam String title) {
-        return blogService.searchBlogsByTitle(title);
+        return ResponseEntity.ok(blogService.searchBlogsByTitle(title));
     }
 
     /**
@@ -151,13 +163,13 @@ public class BlogController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PutMapping("/{id}/update-blog")
-    public Mono<ResponseEntity<BlogDTO>> updateBlog(
+    public ResponseEntity<BlogDTO> updateBlog(
             @Parameter(description = "Blog ID", required = true)
             @PathVariable String id,
             @Valid @RequestBody BlogEditDTO blogEditDTO) {
         return blogService.updateBlog(id, blogEditDTO)
                 .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.notFound().build());
     }
 
     /**
@@ -175,13 +187,11 @@ public class BlogController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @DeleteMapping("/{id}")
-    public Mono<ResponseEntity<Void>> deleteBlog(
+    public ResponseEntity<Void> deleteBlog(
             @Parameter(description = "Blog ID", required = true)
             @PathVariable String id) {
-        return blogService.deleteBlog(id)
-                .map(deleted -> deleted ?
-                    ResponseEntity.noContent().<Void>build() :
-                    ResponseEntity.notFound().<Void>build());
+        boolean deleted = blogService.deleteBlog(id);
+        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
     /**
@@ -203,14 +213,9 @@ public class BlogController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/paginated")
-    public Mono<ResponseEntity<BlogPageResponse>> getPaginatedBlogs(
-            @Parameter(description = "Page number (0-based)", example = "0")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Number of items per page", example = "10")
-            @RequestParam(defaultValue = "10") int size) {
-
-        return blogService.getPaginatedBlogs(page, size)
-                .map(ResponseEntity::ok);
+    public ResponseEntity<BlogPageResponse> getPaginatedBlogs(@RequestParam(defaultValue = "0") int page,
+                                                              @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(blogService.getPaginatedBlogs(page, size));
     }
 
     /**
@@ -234,18 +239,91 @@ public class BlogController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping("/feed")
-    public Mono<ResponseEntity<BlogCursorResponse>> getBlogsFeed(
-            @Parameter(
-                description = "Cursor for pagination (omit or use empty string for first page, " +
-                             "use 'nextCursor' from previous response for subsequent pages)",
-                example = ""
-            )
-            @RequestParam(required = false) String cursor,
-            @Parameter(description = "Number of items to fetch", example = "10")
-            @RequestParam(defaultValue = "10") int size) {
+    public ResponseEntity<BlogCursorResponse> getBlogsFeed(@RequestParam(required = false) String cursor,
+                                                           @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(blogService.getBlogsByCursor(cursor, size));
+    }
 
-        return blogService.getBlogsByCursor(cursor, size)
-                .map(ResponseEntity::ok);
+    /**
+     * Get newest blogs with cursor pagination using BlogDisplay DTO (Optimized for social media feeds)
+     *
+     * Response Codes:
+     * - 200 OK: Successfully retrieved newest blogs with display information
+     * - 400 BAD REQUEST: Invalid cursor or size parameter
+     * - 500 INTERNAL SERVER ERROR: Server error during retrieval
+     */
+    @Operation(
+        summary = "Get newest blogs with cursor pagination (Display Format)",
+        description = "Retrieves the newest blog posts using cursor-based pagination with BlogDisplay format. " +
+                      "This endpoint is optimized for social media feeds with author information. " +
+                      "Pass the 'nextCursor' from previous response to load more blogs."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved newest blogs",
+            content = @Content(schema = @Schema(implementation = CursorPageDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid cursor or size parameter"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/newest/cursor")
+    public ResponseEntity<CursorPageDTO<BlogDisplay>> getNewestBlogsWithCursor(
+            @Parameter(description = "Cursor for pagination (Base64 encoded timestamp)", required = false)
+            @RequestParam(required = false) String cursor,
+            @Parameter(description = "Number of blogs to retrieve", required = false)
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(blogService.getNewestBlogsWithCursor(cursor, size));
+    }
+
+    /**
+     * Get newest blogs with offset pagination using BlogDisplay DTO
+     *
+     * Response Codes:
+     * - 200 OK: Successfully retrieved newest blogs with pagination info
+     * - 400 BAD REQUEST: Invalid pagination parameters
+     * - 500 INTERNAL SERVER ERROR: Server error during retrieval
+     */
+    @Operation(
+        summary = "Get newest blogs with offset pagination (Display Format)",
+        description = "Retrieves the newest blog posts using traditional offset-based pagination with BlogDisplay format. " +
+                      "Includes author information and comprehensive pagination metadata."
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Successfully retrieved newest blogs",
+            content = @Content(schema = @Schema(implementation = BlogPageResponse.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid pagination parameters"),
+        @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/newest/paginated")
+    public ResponseEntity<BlogPageResponse> getNewestBlogsWithPagination(
+            @Parameter(description = "Page number (0-based)", required = false)
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Number of blogs per page", required = false)
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(blogService.getNewestBlogsWithPagination(page, size));
+    }
+
+    /**
+     * Get blog display information by ID
+     *
+     * Response Codes:
+     * - 200 OK: Blog found with display information
+     * - 404 NOT FOUND: Blog with the specified ID does not exist
+     */
+    @Operation(
+        summary = "Get blog display by ID",
+        description = "Retrieves a specific blog post by its ID in display format with author information"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Blog found",
+            content = @Content(schema = @Schema(implementation = BlogDisplay.class))),
+        @ApiResponse(responseCode = "404", description = "Blog not found")
+    })
+    @GetMapping("/{id}/display")
+    public ResponseEntity<BlogDisplay> getBlogDisplayById(
+            @Parameter(description = "Blog ID", required = true)
+            @PathVariable String id) {
+        return blogService.getBlogDisplayById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
 }

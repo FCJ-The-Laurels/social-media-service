@@ -10,7 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class BlogCursorResponse {
-    private List<BlogDTO> content;
+    private List<BlogDisplay> content;
     private String nextCursor;
     private boolean hasMore;
     private int size;

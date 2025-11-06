@@ -7,8 +7,10 @@ import FCJLaurels.awsrek.model.image;
 import FCJLaurels.awsrek.repository.ImageRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ImageServiceImplementation implements ImageService {
@@ -17,78 +19,78 @@ public class ImageServiceImplementation implements ImageService {
     private ImageRepository imageRepository;
 
     @Override
-    public Mono<ImageDTO> createImage(ImageCreationDTO imageCreationDTO) {
+    public ImageDTO createImage(ImageCreationDTO imageCreationDTO) {
         image newImage = image.builder()
                 .name(imageCreationDTO.getName())
                 .url(imageCreationDTO.getUrl())
                 .type(imageCreationDTO.getType())
                 .build();
 
-        return imageRepository.save(newImage)
-                .map(this::mapToDTO);
+        image saved = imageRepository.save(newImage);
+        return mapToDTO(saved);
     }
 
     @Override
-    public Mono<ImageDTO> getImageById(String id) {
-        return imageRepository.findById(id)
-                .map(this::mapToDTO);
+    public Optional<ImageDTO> getImageById(String id) {
+        return imageRepository.findById(id).map(this::mapToDTO);
     }
 
     @Override
-    public Flux<ImageDTO> getAllImages() {
-        return imageRepository.findAll()
-                .map(this::mapToDTO);
+    public List<ImageDTO> getAllImages() {
+        return imageRepository.findAll().stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     @Override
-    public Flux<ImageDTO> getImagesByName(String name) {
-        return imageRepository.findByName(name)
-                .map(this::mapToDTO);
+    public List<ImageDTO> getImagesByName(String name) {
+        return imageRepository.findByName(name).stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     @Override
-    public Flux<ImageDTO> getImagesByType(String type) {
-        return imageRepository.findByType(type)
-                .map(this::mapToDTO);
+    public List<ImageDTO> getImagesByType(String type) {
+        return imageRepository.findByType(type).stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     @Override
-    public Mono<ImageDTO> updateImage(String id, ImageEditDTO imageEditDTO) {
-        return imageRepository.findById(id)
-                .flatMap(img -> {
-                    img.setName(imageEditDTO.getName());
-                    img.setUrl(imageEditDTO.getUrl());
-                    img.setType(imageEditDTO.getType());
-                    return imageRepository.save(img);
-                })
-                .map(this::mapToDTO);
+    public Optional<ImageDTO> updateImage(String id, ImageEditDTO imageEditDTO) {
+        Optional<image> existing = imageRepository.findById(id);
+        if (existing.isPresent()) {
+            image img = existing.get();
+            img.setName(imageEditDTO.getName());
+            img.setUrl(imageEditDTO.getUrl());
+            img.setType(imageEditDTO.getType());
+            image saved = imageRepository.save(img);
+            return Optional.of(mapToDTO(saved));
+        }
+        return Optional.empty();
     }
 
     @Override
-    public Mono<Boolean> deleteImage(String id) {
-        return imageRepository.existsById(id)
-                .flatMap(exists -> {
-                    if (exists) {
-                        return imageRepository.deleteById(id)
-                                .thenReturn(true);
-                    }
-                    return Mono.just(false);
-                });
+    public boolean deleteImage(String id) {
+        boolean exists = imageRepository.existsById(id);
+        if (exists) {
+            imageRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 
     @Override
-    public Mono<Long> deleteImagesByType(String type) {
-        return imageRepository.findByType(type)
-                .flatMap(img -> imageRepository.deleteById(img.getId()).thenReturn(1L))
-                .reduce(0L, Long::sum);
+    public long deleteImagesByType(String type) {
+        List<image> imgs = imageRepository.findByType(type);
+        long deleted = 0;
+        for (image img : imgs) {
+            imageRepository.deleteById(img.getId());
+            deleted++;
+        }
+        return deleted;
     }
 
     @Override
-    public Flux<ImageDTO> searchImagesByNameContaining(String nameKeyword) {
-        return imageRepository.findAll()
-                .filter(img -> img.getName() != null &&
-                               img.getName().toLowerCase().contains(nameKeyword.toLowerCase()))
-                .map(this::mapToDTO);
+    public List<ImageDTO> searchImagesByNameContaining(String nameKeyword) {
+        return imageRepository.findAll().stream()
+                .filter(img -> img.getName() != null && img.getName().toLowerCase().contains(nameKeyword.toLowerCase()))
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 
     @Override

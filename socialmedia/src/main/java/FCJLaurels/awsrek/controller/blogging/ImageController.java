@@ -16,8 +16,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/images")
@@ -43,9 +43,9 @@ public class ImageController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PostMapping("/create")
-    public Mono<ResponseEntity<ImageDTO>> createImage(@Valid @RequestBody ImageCreationDTO imageCreationDTO) {
-        return imageService.createImage(imageCreationDTO)
-                .map(image -> ResponseEntity.status(HttpStatus.CREATED).body(image));
+    public ResponseEntity<ImageDTO> createImage(@Valid @RequestBody ImageCreationDTO imageCreationDTO) {
+        ImageDTO created = imageService.createImage(imageCreationDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     /**
@@ -62,12 +62,12 @@ public class ImageController {
         @ApiResponse(responseCode = "404", description = "Image not found")
     })
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<ImageDTO>> getImageById(
+    public ResponseEntity<ImageDTO> getImageById(
             @Parameter(description = "Image ID", required = true)
             @PathVariable String id) {
         return imageService.getImageById(id)
                 .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.notFound().build());
     }
 
     /**
@@ -84,8 +84,8 @@ public class ImageController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @GetMapping
-    public Flux<ImageDTO> getAllImages() {
-        return imageService.getAllImages();
+    public ResponseEntity<List<ImageDTO>> getAllImages() {
+        return ResponseEntity.ok(imageService.getAllImages());
     }
 
     /**
@@ -102,10 +102,10 @@ public class ImageController {
         @ApiResponse(responseCode = "400", description = "Invalid name parameter")
     })
     @GetMapping("/name/{name}")
-    public Flux<ImageDTO> getImagesByName(
+    public ResponseEntity<List<ImageDTO>> getImagesByName(
             @Parameter(description = "Image name", required = true)
             @PathVariable String name) {
-        return imageService.getImagesByName(name);
+        return ResponseEntity.ok(imageService.getImagesByName(name));
     }
 
     /**
@@ -122,10 +122,10 @@ public class ImageController {
         @ApiResponse(responseCode = "400", description = "Invalid type parameter")
     })
     @GetMapping("/type/{type}")
-    public Flux<ImageDTO> getImagesByType(
+    public ResponseEntity<List<ImageDTO>> getImagesByType(
             @Parameter(description = "Image type (e.g., jpg, png, gif)", required = true)
             @PathVariable String type) {
-        return imageService.getImagesByType(type);
+        return ResponseEntity.ok(imageService.getImagesByType(type));
     }
 
     /**
@@ -142,10 +142,10 @@ public class ImageController {
         @ApiResponse(responseCode = "400", description = "Invalid search query")
     })
     @GetMapping("/search")
-    public Flux<ImageDTO> searchImagesByName(
+    public ResponseEntity<List<ImageDTO>> searchImagesByName(
             @Parameter(description = "Name search keyword", required = true)
             @RequestParam String keyword) {
-        return imageService.searchImagesByNameContaining(keyword);
+        return ResponseEntity.ok(imageService.searchImagesByNameContaining(keyword));
     }
 
     /**
@@ -166,13 +166,13 @@ public class ImageController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @PutMapping("/{id}")
-    public Mono<ResponseEntity<ImageDTO>> updateImage(
+    public ResponseEntity<ImageDTO> updateImage(
             @Parameter(description = "Image ID", required = true)
             @PathVariable String id,
             @Valid @RequestBody ImageEditDTO imageEditDTO) {
         return imageService.updateImage(id, imageEditDTO)
                 .map(ResponseEntity::ok)
-                .defaultIfEmpty(ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.notFound().build());
     }
 
     /**
@@ -190,13 +190,11 @@ public class ImageController {
         @ApiResponse(responseCode = "500", description = "Internal server error")
     })
     @DeleteMapping("/{id}")
-    public Mono<ResponseEntity<Void>> deleteImage(
+    public ResponseEntity<Void> deleteImage(
             @Parameter(description = "Image ID", required = true)
             @PathVariable String id) {
-        return imageService.deleteImage(id)
-                .map(deleted -> deleted ?
-                    ResponseEntity.noContent().<Void>build() :
-                    ResponseEntity.notFound().<Void>build());
+        boolean deleted = imageService.deleteImage(id);
+        return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
     /**
@@ -212,10 +210,10 @@ public class ImageController {
         @ApiResponse(responseCode = "400", description = "Invalid type parameter")
     })
     @DeleteMapping("/type/{type}")
-    public Mono<ResponseEntity<Long>> deleteImagesByType(
+    public ResponseEntity<Long> deleteImagesByType(
             @Parameter(description = "Image type", required = true)
             @PathVariable String type) {
-        return imageService.deleteImagesByType(type)
-                .map(ResponseEntity::ok);
+        long count = imageService.deleteImagesByType(type);
+        return ResponseEntity.ok(count);
     }
 }

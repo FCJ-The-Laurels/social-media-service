@@ -10,7 +10,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class BlogPageResponse {
-    private List<BlogDTO> content;
+    private List<BlogDisplay> content;
     private int page;
     private int size;
     private long totalElements;

@@ -6,8 +6,10 @@ import FCJLaurels.awsrek.model.like;
 import FCJLaurels.awsrek.repository.LikeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class LikeServiceImplementation implements LikeService {
@@ -16,108 +18,96 @@ public class LikeServiceImplementation implements LikeService {
     private LikeRepository likeRepository;
 
     @Override
-    public Mono<LikeDTO> createLike(LikeCreationDTO likeCreationDTO) {
+    public LikeDTO createLike(LikeCreationDTO likeCreationDTO) {
         like newLike = like.builder()
                 .blogId(likeCreationDTO.getBlogId())
                 .userId(likeCreationDTO.getUserId())
                 .build();
 
-        return likeRepository.save(newLike)
-                .map(this::mapToDTO);
+        like saved = likeRepository.save(newLike);
+        return mapToDTO(saved);
     }
 
     @Override
-    public Mono<LikeDTO> getLikeById(String id) {
-        return likeRepository.findById(id)
-                .map(this::mapToDTO);
+    public Optional<LikeDTO> getLikeById(String id) {
+        return likeRepository.findById(id).map(this::mapToDTO);
     }
 
     @Override
-    public Flux<LikeDTO> getAllLikes() {
-        return likeRepository.findAll()
-                .map(this::mapToDTO);
+    public List<LikeDTO> getAllLikes() {
+        return likeRepository.findAll().stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     @Override
-    public Flux<LikeDTO> getLikesByBlogId(String blogId) {
-        return likeRepository.findByBlogId(blogId)
-                .map(this::mapToDTO);
+    public List<LikeDTO> getLikesByBlogId(String blogId) {
+        return likeRepository.findByBlogId(blogId).stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     @Override
-    public Flux<LikeDTO> getLikesByUserId(String userId) {
-        return likeRepository.findByUserId(userId)
-                .map(this::mapToDTO);
+    public List<LikeDTO> getLikesByUserId(String userId) {
+        return likeRepository.findByUserId(userId).stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     @Override
-    public Mono<Boolean> hasUserLikedBlog(String userId, String blogId) {
+    public boolean hasUserLikedBlog(String userId, String blogId) {
         return likeRepository.existsByUserIdAndBlogId(userId, blogId);
     }
 
     @Override
-    public Mono<LikeDTO> getLikeByUserIdAndBlogId(String userId, String blogId) {
-        return likeRepository.findByUserIdAndBlogId(userId, blogId)
-                .map(this::mapToDTO);
+    public Optional<LikeDTO> getLikeByUserIdAndBlogId(String userId, String blogId) {
+        return likeRepository.findByUserIdAndBlogId(userId, blogId).map(this::mapToDTO);
     }
 
     @Override
-    public Mono<Boolean> deleteLike(String id) {
-        return likeRepository.existsById(id)
-                .flatMap(exists -> {
-                    if (exists) {
-                        return likeRepository.deleteById(id)
-                                .thenReturn(true);
-                    }
-                    return Mono.just(false);
-                });
+    public boolean deleteLike(String id) {
+        boolean exists = likeRepository.existsById(id);
+        if (exists) {
+            likeRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 
     @Override
-    public Mono<Boolean> deleteLikeByUserIdAndBlogId(String userId, String blogId) {
-        return likeRepository.existsByUserIdAndBlogId(userId, blogId)
-                .flatMap(exists -> {
-                    if (exists) {
-                        return likeRepository.deleteByUserIdAndBlogId(userId, blogId)
-                                .thenReturn(true);
-                    }
-                    return Mono.just(false);
-                });
+    public boolean deleteLikeByUserIdAndBlogId(String userId, String blogId) {
+        boolean exists = likeRepository.existsByUserIdAndBlogId(userId, blogId);
+        if (exists) {
+            likeRepository.deleteByUserIdAndBlogId(userId, blogId);
+            return true;
+        }
+        return false;
     }
 
     @Override
-    public Mono<Long> deleteLikesByBlogId(String blogId) {
+    public long deleteLikesByBlogId(String blogId) {
         return likeRepository.deleteByBlogId(blogId);
     }
 
     @Override
-    public Mono<Long> countLikesByBlogId(String blogId) {
+    public long countLikesByBlogId(String blogId) {
         return likeRepository.countByBlogId(blogId);
     }
 
     @Override
-    public Mono<Long> countLikesByUserId(String userId) {
+    public long countLikesByUserId(String userId) {
         return likeRepository.countByUserId(userId);
     }
 
     @Override
-    public Mono<LikeDTO> toggleLike(String userId, String blogId) {
-        return likeRepository.existsByUserIdAndBlogId(userId, blogId)
-                .flatMap(exists -> {
-                    if (exists) {
-                        // Unlike - delete the like and return empty
-                        return likeRepository.deleteByUserIdAndBlogId(userId, blogId)
-                                .then(Mono.empty());
-                    } else {
-                        // Like - create new like
-                        like newLike = like.builder()
-                                .blogId(blogId)
-                                .userId(userId)
-                                .build();
-                        return likeRepository.save(newLike)
-                                .map(this::mapToDTO);
-                    }
-                });
+    public Optional<LikeDTO> toggleLike(String userId, String blogId) {
+        boolean exists = likeRepository.existsByUserIdAndBlogId(userId, blogId);
+        if (exists) {
+            // Unlike: delete and return empty
+            likeRepository.deleteByUserIdAndBlogId(userId, blogId);
+            return Optional.empty();
+        } else {
+            like newLike = like.builder()
+                    .blogId(blogId)
+                    .userId(userId)
+                    .build();
+            like saved = likeRepository.save(newLike);
+            return Optional.of(mapToDTO(saved));
+        }
     }
 
     @Override

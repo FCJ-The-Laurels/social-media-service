@@ -3,31 +3,35 @@ package FCJLaurels.awsrek.repository;
 import FCJLaurels.awsrek.model.blog;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.Query;
-import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
+import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Tailable;
 import org.springframework.stereotype.Repository;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
 @Repository
-public interface BlogRepository extends ReactiveMongoRepository<blog, String> {
-    Flux<blog> findAllByOrderByCreationDateDesc(Pageable pageable);
-    Flux<blog> findByAuthor(String author);
-    Flux<blog> findByTitleContainingIgnoreCase(String title);
+public interface BlogRepository extends MongoRepository<blog, String> {
+    List<blog> findAllByOrderByCreationDateDesc(Pageable pageable);
+
+    // Fixed to accept UUID instead of String
+    List<blog> findByAuthor(UUID author);
+
+    List<blog> findByTitleContainingIgnoreCase(String title);
 
     @Tailable
     @Query("{}")
-    Flux<blog> streamAllBy();
+    List<blog> streamAllBy();
 
     // Cursor-based pagination methods for infinite scrolling
-    Flux<blog> findByCreationDateLessThanOrderByCreationDateDesc(LocalDateTime cursor, Pageable pageable);
+    List<blog> findByCreationDateLessThanOrderByCreationDateDesc(LocalDateTime cursor, Pageable pageable);
 
-    Flux<blog> findByCreationDateGreaterThanOrderByCreationDateAsc(LocalDateTime cursor, Pageable pageable);
+    List<blog> findByCreationDateGreaterThanOrderByCreationDateAsc(LocalDateTime cursor, Pageable pageable);
 
     @Query("{ 'creationDate': { $lt: ?0 }, 'id': { $lt: ?1 } }")
-    Flux<blog> findByCreationDateAndIdLessThan(LocalDateTime creationDate, String id, Pageable pageable);
+    List<blog> findByCreationDateAndIdLessThan(LocalDateTime creationDate, String id, Pageable pageable);
 
-    Mono<Long> countByCreationDateLessThan(LocalDateTime cursor);
+    long countByCreationDateLessThan(LocalDateTime cursor);
+    // keep count() from MongoRepository for total count if needed
 }

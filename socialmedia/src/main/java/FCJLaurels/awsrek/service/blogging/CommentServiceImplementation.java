@@ -7,8 +7,10 @@ import FCJLaurels.awsrek.model.comment;
 import FCJLaurels.awsrek.repository.CommentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class CommentServiceImplementation implements CommentService {
@@ -17,70 +19,66 @@ public class CommentServiceImplementation implements CommentService {
     private CommentRepository commentRepository;
 
     @Override
-    public Mono<CommentDTO> createComment(CommentCreationDTO commentCreationDTO) {
+    public CommentDTO createComment(CommentCreationDTO commentCreationDTO) {
         comment newComment = comment.builder()
                 .blogId(commentCreationDTO.getBlogId())
                 .userId(commentCreationDTO.getUserId())
                 .content(commentCreationDTO.getContent())
                 .build();
 
-        return commentRepository.save(newComment)
-                .map(this::mapToDTO);
+        comment saved = commentRepository.save(newComment);
+        return mapToDTO(saved);
     }
 
     @Override
-    public Mono<CommentDTO> getCommentById(String id) {
-        return commentRepository.findById(id)
-                .map(this::mapToDTO);
+    public Optional<CommentDTO> getCommentById(String id) {
+        return commentRepository.findById(id).map(this::mapToDTO);
     }
 
     @Override
-    public Flux<CommentDTO> getAllComments() {
-        return commentRepository.findAll()
-                .map(this::mapToDTO);
+    public List<CommentDTO> getAllComments() {
+        return commentRepository.findAll().stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     @Override
-    public Flux<CommentDTO> getCommentsByBlogId(String blogId) {
-        return commentRepository.findByBlogId(blogId)
-                .map(this::mapToDTO);
+    public List<CommentDTO> getCommentsByBlogId(String blogId) {
+        return commentRepository.findByBlogId(blogId).stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     @Override
-    public Flux<CommentDTO> getCommentsByUserId(String userId) {
-        return commentRepository.findByUserId(userId)
-                .map(this::mapToDTO);
+    public List<CommentDTO> getCommentsByUserId(String userId) {
+        return commentRepository.findByUserId(userId).stream().map(this::mapToDTO).collect(Collectors.toList());
     }
 
     @Override
-    public Mono<CommentDTO> updateComment(String id, CommentEditDTO commentEditDTO) {
-        return commentRepository.findById(id)
-                .flatMap(c -> {
-                    c.setContent(commentEditDTO.getContent());
-                    return commentRepository.save(c);
-                })
-                .map(this::mapToDTO);
+    public Optional<CommentDTO> updateComment(String id, CommentEditDTO commentEditDTO) {
+        Optional<comment> existing = commentRepository.findById(id);
+        if (existing.isPresent()) {
+            comment c = existing.get();
+            c.setContent(commentEditDTO.getContent());
+            comment saved = commentRepository.save(c);
+            return Optional.of(mapToDTO(saved));
+        }
+        return Optional.empty();
     }
 
     @Override
-    public Mono<Boolean> deleteComment(String id) {
-        return commentRepository.existsById(id)
-                .flatMap(exists -> {
-                    if (exists) {
-                        return commentRepository.deleteById(id)
-                                .thenReturn(true);
-                    }
-                    return Mono.just(false);
-                });
+    public boolean deleteComment(String id) {
+        boolean exists = commentRepository.existsById(id);
+        if (exists) {
+            commentRepository.deleteById(id);
+            return true;
+        }
+        return false;
     }
 
     @Override
-    public Mono<Long> deleteCommentsByBlogId(String blogId) {
+    public long deleteCommentsByBlogId(String blogId) {
         return commentRepository.deleteByBlogId(blogId);
     }
 
     @Override
-    public Mono<Long> countCommentsByBlogId(String blogId) {
+    public long countCommentsByBlogId(String blogId) {
         return commentRepository.countByBlogId(blogId);
     }
 
