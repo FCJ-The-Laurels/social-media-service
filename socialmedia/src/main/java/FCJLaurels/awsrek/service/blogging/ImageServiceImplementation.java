@@ -5,18 +5,63 @@ import FCJLaurels.awsrek.DTO.imageDTO.ImageDTO;
 import FCJLaurels.awsrek.DTO.imageDTO.ImageEditDTO;
 import FCJLaurels.awsrek.model.image;
 import FCJLaurels.awsrek.repository.ImageRepository;
+import FCJLaurels.awsrek.service.aws.S3Service;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class ImageServiceImplementation implements ImageService {
 
     @Autowired
     private ImageRepository imageRepository;
+
+    @Autowired
+    private S3Service s3Service;
+
+    @Override
+    public ImageDTO uploadImageToS3(MultipartFile file) throws IOException {
+        // Validate file
+        if (file.isEmpty()) {
+            throw new IllegalArgumentException("File is empty");
+        }
+
+        // Get file metadata
+        String originalFilename = file.getOriginalFilename();
+        String contentType = file.getContentType();
+
+        // Extract file extension/type
+        String fileType = "unknown";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            fileType = originalFilename.substring(originalFilename.lastIndexOf(".") + 1).toLowerCase();
+        } else if (contentType != null && contentType.contains("/")) {
+            fileType = contentType.substring(contentType.lastIndexOf("/") + 1);
+        }
+
+        log.info("Uploading file to S3: {} (type: {})", originalFilename, fileType);
+
+        // Upload to S3
+        String fileUrl = s3Service.uploadFile(file);
+
+        // Save image metadata to database
+        image newImage = image.builder()
+                .name(originalFilename)
+                .url(fileUrl)
+                .type(fileType)
+                .build();
+
+        image saved = imageRepository.save(newImage);
+        log.info("Image metadata saved to database with ID: {}", saved.getId());
+
+        return mapToDTO(saved);
+    }
 
     @Override
     public ImageDTO createImage(ImageCreationDTO imageCreationDTO) {

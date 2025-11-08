@@ -14,9 +14,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -26,6 +29,57 @@ import java.util.List;
 public class ImageController {
 
     private final ImageService imageService;
+
+    /**
+     * Upload an image file to S3 and return the image URL
+     *
+     * Response Codes:
+     * - 201 CREATED: Image successfully uploaded to S3 and metadata saved
+     * - 400 BAD REQUEST: Invalid file or file validation errors (empty file, unsupported format)
+     * - 500 INTERNAL SERVER ERROR: Server error during upload or S3 operation
+     */
+    @Operation(summary = "Upload image to S3", description = "Uploads an image file to AWS S3 and returns the public URL along with saved metadata")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Image successfully uploaded",
+            content = @Content(schema = @Schema(implementation = ImageDTO.class))),
+        @ApiResponse(responseCode = "400", description = "Invalid file or empty file"),
+        @ApiResponse(responseCode = "500", description = "Internal server error or S3 upload failure")
+    })
+    @PostMapping(value = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadImageToS3(
+            @Parameter(description = "Image file to upload", required = true)
+            @RequestParam("file") MultipartFile file) {
+        try {
+            // Validate file
+            if (file.isEmpty()) {
+                return ResponseEntity.badRequest().body("File is empty");
+            }
+
+            // Validate file size (10MB limit)
+            long maxFileSize = 10 * 1024 * 1024; // 10MB
+            if (file.getSize() > maxFileSize) {
+                return ResponseEntity.badRequest().body("File size exceeds maximum limit of 10MB");
+            }
+
+            // Validate file type (images only)
+            String contentType = file.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                return ResponseEntity.badRequest().body("Only image files are allowed");
+            }
+
+            ImageDTO uploadedImage = imageService.uploadImageToS3(file);
+            return ResponseEntity.status(HttpStatus.CREATED).body(uploadedImage);
+
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to upload image: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("An unexpected error occurred: " + e.getMessage());
+        }
+    }
 
     /**
      * Upload/Create a new image

@@ -3,11 +3,16 @@ package FCJLaurels.awsrek.service.blogging;
 import FCJLaurels.awsrek.DTO.imageDTO.ImageCreationDTO;
 import FCJLaurels.awsrek.DTO.imageDTO.ImageDTO;
 import FCJLaurels.awsrek.DTO.imageDTO.ImageEditDTO;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
 public interface ImageService {
+    // Upload image to S3 and save metadata
+    ImageDTO uploadImageToS3(MultipartFile file) throws IOException;
+
     // Create a new image
     ImageDTO createImage(ImageCreationDTO imageCreationDTO);
 
