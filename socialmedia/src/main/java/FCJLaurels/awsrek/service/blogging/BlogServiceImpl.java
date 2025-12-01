@@ -404,7 +404,7 @@ public class BlogServiceImpl implements BlogService {
         String authorName = null;
         String authorAvatar = null;
 
-        // Fetch author information using gRPC
+        // Fetch author information using gRPC (BLOCKING - synchronous)
         if (entity.getAuthor() != null) {
             try {
                 log.debug("Fetching user info via gRPC for author: {}", entity.getAuthor());
