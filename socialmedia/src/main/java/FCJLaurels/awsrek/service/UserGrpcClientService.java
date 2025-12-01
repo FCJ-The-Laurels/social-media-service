@@ -51,8 +51,7 @@ public class UserGrpcClientService {
                     .keepAliveWithoutCalls(true)
                     .build();
 
-            blockingStub = UserInfoServiceGrpc.newBlockingStub(channel)
-                    .withDeadlineAfter(grpcTimeoutSeconds, TimeUnit.SECONDS);
+            blockingStub = UserInfoServiceGrpc.newBlockingStub(channel);
 
             log.info("✅ gRPC channel initialized successfully");
             log.info("📡 Target: {}:{}", host, port);
@@ -99,24 +98,40 @@ public class UserGrpcClientService {
 
     /**
      * Fetch user information (name and avatar) by user ID using gRPC (BLOCKING)
+     * Accepts UUID as string (e.g., "550e8400-e29b-41d4-a716-446655440000")
      *
-     * @param userId The user ID to fetch information for
+     * @param userId The user ID to fetch information for (UUID as string)
      * @return BlogUserInfoResponse containing name and avatar URL, or null if failed
      */
     public BlogUserInfoResponse getUserInfo(String userId) {
-        if (userId == null || userId.isEmpty()) {
+        if (userId == null || userId.trim().isEmpty()) {
             log.warn("❌ User ID is null or empty, returning null");
             return null;
         }
 
+        String trimmedUserId = userId.trim();
+
         try {
-            log.debug("📡 Fetching user info for userId: {}", userId);
+            log.info("🔍 Fetching user info via gRPC for userId: {} (UUID format)", trimmedUserId);
+
+            // Validate UUID format
+            try {
+                java.util.UUID.fromString(trimmedUserId);
+                log.debug("✅ UUID validation passed for: {}", trimmedUserId);
+            } catch (IllegalArgumentException e) {
+                log.warn("⚠️  Invalid UUID format provided: {}", trimmedUserId);
+                // Continue anyway - let the server handle it
+            }
 
             BlogUserInfoRequest request = BlogUserInfoRequest.newBuilder()
-                    .setId(userId)
+                    .setId(trimmedUserId)
                     .build();
 
-            BlogUserInfoResponse response = blockingStub.blogUserInfo(request);
+            log.debug("📤 Sending gRPC request with UUID: {}", trimmedUserId);
+            BlogUserInfoResponse response = blockingStub
+                    .withDeadlineAfter(grpcTimeoutSeconds, TimeUnit.SECONDS) // <--- MOVE IT HERE
+                    .blogUserInfo(request);
+            log.info("🔍 RAW PROTO RESPONSE: {}", response.toString());
 
             if (response != null) {
                 log.debug("✅ Successfully fetched user info - name: '{}', avatar: '{}'",
@@ -191,9 +206,10 @@ public class UserGrpcClientService {
         try {
             log.debug("🏥 Performing gRPC health check...");
 
-            // Try to make a health check call with a short timeout
+            // FIX: Use a valid UUID format (Zeros) so the server parsing passes
+            // but the DB lookup fails (NOT_FOUND).
             BlogUserInfoRequest request = BlogUserInfoRequest.newBuilder()
-                    .setId("health-check-probe")
+                    .setId("00000000-0000-0000-0000-000000000000")
                     .build();
 
             UserInfoServiceGrpc.UserInfoServiceBlockingStub healthCheckStub =

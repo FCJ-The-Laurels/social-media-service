@@ -398,6 +398,7 @@ public class BlogServiceImpl implements BlogService {
     }
 
     // New mapping method for BlogDisplay with gRPC user info fetching
+    // This calls the blogUserInfo() RPC method from the user service
     private BlogDisplay mapToBlogDisplay(blog entity) {
         if (entity == null) return null;
 
@@ -405,21 +406,37 @@ public class BlogServiceImpl implements BlogService {
         String authorAvatar = null;
 
         // Fetch author information using gRPC (BLOCKING - synchronous)
+        // Calls the blogUserInfo() method from UserInfoService in user service
         if (entity.getAuthor() != null) {
             try {
-                log.debug("Fetching user info via gRPC for author: {}", entity.getAuthor());
-                BlogUserInfoResponse userInfo = userGrpcClientService.getUserInfo(entity.getAuthor().toString());
+                // Convert UUID to String format for gRPC call
+                // The user service expects UUID as a string (e.g., "550e8400-e29b-41d4-a716-446655440000")
+                String authorIdString = entity.getAuthor().toString();
+
+                log.debug("🔄 Converting UUID author to string: {} (type: {})",
+                    authorIdString, entity.getAuthor().getClass().getSimpleName());
+
+                // Call the gRPC service via UserGrpcClientService
+                // This internally calls blogUserInfo(BlogUserInfoRequest) with the UUID string
+                log.info("📞 Calling gRPC blogUserInfo() to fetch user info for author UUID: {}", authorIdString);
+                BlogUserInfoResponse userInfo = userGrpcClientService.getUserInfo(authorIdString);
+
                 if (userInfo != null) {
+                    // Extract only the required fields from BlogUserInfoResponse
+                    // according to the proto contract: string name=1; string avatar=2;
                     authorName = userInfo.getName();
                     authorAvatar = userInfo.getAvatar();
-                    log.debug("User info fetched - name: {}, avatar: {}", authorName, authorAvatar);
+
+                    log.info("✅ gRPC blogUserInfo() fetched successfully - name: '{}', avatar: '{}'",
+                        authorName, authorAvatar);
                 } else {
-                    log.warn("User info is null for author: {}", entity.getAuthor());
+                    log.warn("⚠️  gRPC blogUserInfo() returned null response for author UUID: {}", authorIdString);
                 }
             } catch (Exception e) {
-                log.error("Error fetching user info via gRPC for author: {}", entity.getAuthor(), e);
+                log.error("❌ Error calling gRPC blogUserInfo() for author UUID: {}",
+                    entity.getAuthor(), e);
                 if (metricsService != null) {
-                    metricsService.incrementApiError("UserInfoFetchError");
+                    metricsService.incrementApiError("BlogUserInfoFetchError");
                 }
             }
         }
