@@ -10,6 +10,7 @@ import java.time.LocalDateTime;
 @Builder
 
 public class BlogDisplay {
+    private String id;
     private String authorName;
     private String authorAvatar;
     private String title;

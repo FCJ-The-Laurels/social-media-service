@@ -442,6 +442,7 @@ public class BlogServiceImpl implements BlogService {
         }
 
         return BlogDisplay.builder()
+                .id(entity.getId())
                 .authorName(authorName != null && !authorName.isEmpty() ? authorName : "Unknown User")
                 .authorAvatar(authorAvatar)
                 .title(entity.getTitle())
