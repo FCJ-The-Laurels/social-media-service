@@ -77,25 +77,15 @@ spring.data.mongodb.uri=mongodb+srv://<username>:<password>@<cluster>.mongodb.ne
 spring.data.mongodb.database=awsrek_db
 ```
 
-#### 2. JWT Configuration
-```properties
-jwt.secret=<your-secret-key>
-jwt.expiration=86400000
-jwt.refresh-expiration=604800000
-```
 
-#### 3. CORS Configuration
+
+#### 2. CORS Configuration
 ```properties
 cors.allowed-origins=*
 cors.allowed-methods=GET,POST,PUT,DELETE,OPTIONS,PATCH
 cors.allowed-headers=*
 ```
 
-#### 4. AWS Credentials
-Set up AWS credentials via:
-- Environment variables
-- AWS credentials file (`~/.aws/credentials`)
-- IAM Role (if running on EC2/ECS)
 
 ### Build & Run
 
@@ -159,15 +149,9 @@ GET /v3/api-docs - OpenAPI specification
 ## ⚙️ Features
 
 ### 🔐 Authentication
-- JWT-based authentication
-- Role-based access control via Spring Security
-- Token refresh mechanism
+- API Gateway and Cognito based authentication
+- HTTP header data validation
 
-### 📸 AWS Rekognition Integration
-- Image labeling and object detection
-- Face detection and analysis
-- Text recognition (OCR)
-- Moderation checks
 
 ### 💬 Social Media Features
 - **Blogging** - Create, read, update, delete posts
@@ -261,7 +245,7 @@ socialmedia/
 │   │   │   ├── DTO/                 # Data transfer objects
 │   │   │   ├── config/              # Spring configurations
 │   │   │   └── TestingApplication.java
-│   │   ├── proto/                   # gRPC Protocol Buffer files
+│   │   ├── proto/                   # gRPC Protocol Buffer contract files
 │   │   └── resources/
 │   │       └── application.properties
 │   └── test/
