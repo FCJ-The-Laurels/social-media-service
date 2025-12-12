@@ -2,7 +2,7 @@
 
 ---
 
-## 📋 Project Overview
+##  Project Overview
 
 This is a **Spring Boot 3.5.6** microservice built with Java 25 that provides:
 - **Social Media Features** including blogging, messaging, and interactions
@@ -13,7 +13,7 @@ This is a **Spring Boot 3.5.6** microservice built with Java 25 that provides:
 
 ---
 
-## 🛠️ Technology Stack
+##  Technology Stack
 
 ### Core Framework
 - **Spring Boot 3.5.6** - Latest Spring Boot framework
@@ -108,7 +108,7 @@ server.port=8080
 
 ---
 
-## 📊 API Endpoints
+##  API Endpoints
 
 ### Health Check Endpoints
 AWS API Gateway compatible health endpoints:
@@ -146,25 +146,25 @@ GET /v3/api-docs - OpenAPI specification
 
 ---
 
-## ⚙️ Features
+##  Features
 
-### 🔐 Authentication
+###  Authentication
 - API Gateway and Cognito based authentication
 - HTTP header data validation
 
 
-### 💬 Social Media Features
+###  Social Media Features
 - **Blogging** - Create, read, update, delete posts
 - **Messaging** - User-to-user communication
 - **Interactions** - Comments, likes, and reactions
 - **User Profiles** - User information management
 
-### 📡 gRPC Communication
+###  gRPC Communication
 - Inter-service communication via Protocol Buffers
 - High-performance async RPC calls
 - User service integration
 
-### 📈 Monitoring & Observability
+###  Monitoring & Observability
 - Real-time metrics via Prometheus
 - JVM, Process, and System metrics
 - HTTP request tracking with percentile histograms
@@ -172,7 +172,7 @@ GET /v3/api-docs - OpenAPI specification
 
 ---
 
-## 🐳 Docker Deployment
+##  Docker Deployment
 
 The project includes a multi-stage Dockerfile:
 
@@ -197,14 +197,14 @@ The project includes a multi-stage Dockerfile:
 
 Your project includes `spring-boot-starter-actuator` which provides:
 
-✅ **Included Features:**
+ **Included Features:**
 - Health endpoint checks
 - Metrics collection
 - Environment information
 - Thread information
 - JVM diagnostics
 
-⚠️ **Note:** Actuator is already in your pom.xml and is required for AWS API Gateway health checks. All endpoints are exposed via:
+ **Note:** Actuator is already in the pom.xml and is required for AWS API Gateway health checks. All endpoints are exposed via:
 ```properties
 management.endpoints.web.exposure.include=*
 ```
@@ -231,7 +231,7 @@ logging.level.org.springframework.security=DEBUG
 
 ---
 
-## 📦 Project Structure
+## Project Structure
 
 ```
 socialmedia/
