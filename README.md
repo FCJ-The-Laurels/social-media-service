@@ -28,10 +28,8 @@ This is a **Spring Boot 3.5.6** microservice built with Java 25 that provides:
 
 
 ### Authentication & Security
-- **Spring Security** - Authentication and authorization framework
-- **JWT (JJWT 0.11.5)** - Token-based authentication
-  - JWT Secret: Configurable via `jwt.secret`
-  - Token Expiration: 24 hours (86400000ms)
+  - Spring Security - Authentication and authorization framework
+  - Authorization and authentication by API gateway and Cognito
   - Refresh Token Expiration: 7 days
 
 ### API & Documentation
