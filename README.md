@@ -1,6 +1,4 @@
-# AWS Rekognition Social Media Platform
-
-A modern Spring Boot application that integrates AWS Rekognition for AI-powered image analysis with a complete backend solution for social media features, user authentication, and monitoring.
+# Social Media Service
 
 ---
 
